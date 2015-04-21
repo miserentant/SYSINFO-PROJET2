@@ -5,6 +5,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \begin{document}
+\author{Iserentant Merlin - Momin Charles}
 \title{Rapport projet 2: Architecture}
 \maketitle
 
@@ -17,15 +18,15 @@ Le programme se déroulera en trois phases:
 \item{Analyse des facteurs premiers}
 \end{itemize}
 
-Les deux premières phases se déroulerait simultanéement dans un shéma de producteur/consommateur. Au lancement du programme, des threads producteurs seraient créés afin de lire les nombres contenus dans les différents fichiers et les stocker dans un tableau. "N" threads seraient lancés de façon simultanée afin de factoriser les nombres ainsi obtenus. La factorisation se ferait aussi selon un schéma de producteur/consommateur. L'analyse quant à elle serait faite par un consommateur unique dans le deuxième schéma de production consommation. 
+Les deux premières phases se dérouleraient simultanéement dans un schéma de producteur/consommateur. Au lancement du programme, des threads producteurs seraient créés afin de lire les nombres contenus dans les différents fichiers et les stocker dans un tableau. "N" threads seraient lancés de façon simultanée afin de factoriser les nombres ainsi obtenus. La factorisation se ferait se ferait grâce à l'algorithme 2. L'analyse quant à elle serait faite dans un deuxième temps par le programme principal qui n'aurait qu'à vérifier les comptes des nombres premiers ainsi trouvés. 
 
 \section{Mécanisme de synchronisation}
-Les mulitples threads actualiseront des tableaux de données accessibles aux différents producteurs/consommateurs, via des sémaphores et mutex.  
+Les producteur/consommateurs actualiseront un tableau de données qui leurs servira de lieu d'échange. Tout ces échanges seront effectués via un mécanisme de mutex et sémaphore.
 
 \section{Structure de données}
 \begin{itemize}
 \item{Tableaux de nombres (zones d'échanges entre producteur et consommateur)}
-\item{Liste chainée: Liste des nombres premiers et leurs comptes}
+\item{Liste chainée: Liste des nombres premiers et leurs comptes. Elle est mise à jour si nécessaire.}
 \end{itemize}
 
 \section{Algorithmes}
