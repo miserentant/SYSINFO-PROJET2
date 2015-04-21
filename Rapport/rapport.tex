@@ -8,37 +8,34 @@
 \title{Rapport projet 2: Architecture}
 \maketitle
 
-\section*{Architecture globale}
-Notre implémentation se déroulerait en quatre phase:
+\section{Architecture globale}
+Le programme se déroulera en trois phases:
 
 \begin{itemize}
-\item{Calcul des différents nombres premiers sur 32bits utiles à l'algorithme de factorisation}
-\item{Lecture des différents fichier accompagnée du création d'une liste contenant les nombres chargés}
-\item{Factorisation des nombres chargé en nombres premiers ainsi qu'une mise à jours des comptes des nombres premiers ainsi trouvés}
-\item{Recherche du nombre premier ayant un compte valant 1}
+\item{Chargement des nombre issus des fichiers}
+\item{Factorisation des nombres}
+\item{Analyse des facteurs premiers}
 \end{itemize}
 
-La première et deuxième phase se déroulerait de façon simultanée: le programme principal lancerait des threads qui chargerait les nombres des fichiers en les stockant dans une liste chainée (située sur le tas). Pendant le chargement des nombres, il calculerait l'ensemble des nombres premiers sur 32bits (cfr Algorithme 1) et les stockerait dans un tableau à deux dimensions (situé sur le tas). La première dimension représentait le nombre premier, la seconde servirait de compte. 
+Les deux premières phases se déroulerait simultanéement dans un shéma de producteur/consommateur. Au lancement du programme, des threads producteurs seraient créés afin de lire les nombres contenus dans les différents fichiers et les stocker dans un tableau. "N" threads seraient lancés de façon simultanée afin de factoriser les nombres ainsi obtenus. La factorisation se ferait aussi selon un schéma de producteur/consommateur. L'analyse quant à elle serait faite par un consommateur unique dans le deuxième schéma de production consommation. 
 
-Une fois les deux premières phases terminées, le programme principal relancerait une série de threads qui enlèverait les nombres un à un de la liste chainée pour ensuite les factorier (cfr. Algorithme 2) en mettant les comptes à jours dans le tableau à deux dimensions. Les thread se terminent lorsque la liste chainée est vide. 
+\section{Mécanisme de synchronisation}
+Les mulitples threads actualiseront des tableaux de données accessibles aux différents producteurs/consommateurs, via des sémaphores et mutex.  
 
-La quatrième phase commence lorsque le programme principal a repérée la terminaison des différents threads de la phase trois. Il relance alors des thread qui vont chacun parcourir une partie du tableau de compte à la recherche du nombre premier ayant un compte valant 1. Ce nombre est alors retourné au programme principal. 
-
-\section*{Mécanisme de synchronisation}
-Les différents threads actualiseront des données sur le tas (tableau à deux dimension de compte, liste chainée de fichier et lsite chainées de nombres). Ils y accéderont au moyen de l'exclusion mutuelle en utilisant des mutex/sémaphores.
-
-\section*{Structure de données}
+\section{Structure de données}
 \begin{itemize}
-\item{Liste chainée: Fichier et nombres chargé}
-\item{Tableau de compte}
+\item{Tableaux de nombres (zones d'échanges entre producteur et consommateur)}
+\item{Liste chainée: Liste des nombres premiers et leurs comptes}
 \end{itemize}
 
-\section*{Algorithmes}
- \subsection*{Algorithme 1: génération de nombres premier}
+\section{Algorithmes}
+ \subsection{Algorithme 1: génération de nombres premier}
  
- On suppose que 2 est premier. On va tester chaque nombre l'un à la suite de l'autre en commençant par trois. Le test est le suivant: un nombre est premier s'il n'est pas divisible par un nombre premier inférieur à se racine carrée (nombre donc déjà calculé et enregistré).
+Pour tester si un nombre est premier, il suffit de tester s'il est divisible par tous les nombres premiers inférieur à sa racine carré (déjà calculés et stockés dans la liste chainée). Si ce n'est pas le cas, il s'agit bien d'un nombre premier. 
+ 
  
  \subsection*{Algorithme 2: Factorisation en produit de nombre premier}   
  
- On procède par itération. On test le nombre afin de voir si il est divisible par le plus petit nombre premier trouvé. Si c'est le cas, on considère que ce nombre premier est facteur et on réitère le test sur le résultat de la division ainsi obtenu. Si le test venait à échouer, le test de division s'effectue avec le nombre premier suivant. 
+ On procède par itération. On test le nombre afin de voir si il est divisible par le plus petit nombre premier (2). Si c'est le cas, on considère que ce nombre premier est facteur et on réitère le test sur le résultat de la division ainsi obtenu. Si le test venait à échouer, le test de division s'effectue avec le nombre premier suivant (si la liste chainée n'indique pas de nombre premier suivant, celui-ci est calculé à l'aide de l'algorithme 1 et rajouté à la liste chainée). Les tests de division s'arrête lorsque le nombre est devenu égale à l'unité.
 \end{document}
+
