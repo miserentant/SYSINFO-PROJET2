@@ -1,0 +1,74 @@
+#include <stdio.h> 
+#include <stdlib.h>
+#include <math.h> 
+
+struct prime{ 
+	int nombre; 
+	int compteur; 
+	int fichier; 
+	struct prime *next; 
+}; 
+/* la fonction ajout prime permet de completer la liste de nombre premier en
+ajoutant le nombre premier suivant la liste.
+@pre 	ptrfin: pointeur vers le dernier élément 
+	ptrdebut : pointeur vers le premier élément
+@post : A rajouté le nombre premier suivant à la fin de la liste en le stockant dans une structure sur le tas.
+*/
+struct prime * ajoutprime(struct prime *debut, struct prime *fin){
+	struct prime *diviseur = debut;
+	int nombreatest = (fin->nombre)+1;
+	int boolean =1;
+	while (boolean){	
+		if((nombreatest % diviseur->nombre) ==0){
+			//Ce n'est pas un nombre premier. Il faut tester l'entier suivant.
+			diviseur = debut;
+			nombreatest++;
+		}
+		else{
+			diviseur = diviseur->next;
+			if(diviseur==NULL||( ((double) diviseur->nombre) > ((double) sqrt( (double) nombreatest)) )){
+				boolean = 0;
+			}
+		}
+	}
+	struct prime *suite = (struct prime *)malloc(sizeof(struct prime));
+	suite->nombre = nombreatest;
+	printf("Calcul d'un nombre premier suivant : %d\n",nombreatest);
+	suite->compteur = 0;
+	suite->next = NULL;
+	fin->next=suite; 
+	return suite;	
+}
+/*
+base du code employé par les n threads. Calcul tous les facteurs premiers d'un nombre sur base des nombres premiers déjà calculé et rajoute des nombres premiers si nécessaire.
+*/
+void basethread(struct prime *list,long nombre){
+	struct prime *run = list;
+	while(nombre>1){
+		if(nombre % ((long) run->nombre)==0){
+			nombre  = nombre / ((long) run->nombre);
+			printf("facteur : %d\n",run->nombre);
+		}
+		else if(run->next==NULL){
+			run = ajoutprime(list,run);
+		}
+		else{
+			run = run->next;
+		}
+	}
+}
+
+
+
+
+int main(int argc, const char *argv[]){ 
+	struct prime *list = (struct prime *)malloc(sizeof(struct prime));
+	list->nombre =2;
+	list->compteur = 0;
+	list->next = NULL;
+	basethread(list,86394);
+
+
+
+
+}
