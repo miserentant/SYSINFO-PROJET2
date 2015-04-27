@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Werror -Wall
-LFLAGS=-lpthread
+LFLAGS=-lpthread -lm
 EXEC=programme
 
 all:$(EXEC)
@@ -10,4 +10,8 @@ programme: programme.o
 
 programme.o: programme.c
 	$(CC) -c programme.c -o programme.o $(CFLAGS) $(LFLAGS)
+
+osef: programme.c
+	gcc -c programme.c -o programme.o -lpthread
+	gcc programme.o -o programme -lpthread
 

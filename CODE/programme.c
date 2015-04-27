@@ -19,14 +19,28 @@ sem_t full1;
 long **tabNbr;
 
 char *tabFile;
+int sizetabFile =0;
 char *tabUrl;
-int stdin_true = FALSE;
+int sizetabUrl =0;
+int stdin_bool = FALSE;
+
 //recherche des différents données sur les paramètres
 for(i=1;i<argc;i++){
 	if(strcmp("-maxthreads",argv[i])==0)
 	N=atoi(argv[i+1]);
 
-	
+	if(strcmp("-stdin",argv[i])==0)
+	stdin_bool = TRUE;
+
+	if(strlen(argv[i])>13){ //nombre de caractère nécessaire pour une URL valide
+		if(argv[i][4]==':'){
+			
+		} else {
+			
+		}
+	} else {
+		sizetabFile++;
+ 	}
 	
 }
 
