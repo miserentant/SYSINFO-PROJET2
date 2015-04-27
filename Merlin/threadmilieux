@@ -1,0 +1,57 @@
+#include <stdio.h> 
+#include <stdlib.h>
+#include <math.h> 
+#include <pthread.h> 
+struct prime{ 
+	int nombre; 
+	int compteur; 
+	int fichier; 
+	struct prime *next; 
+}; 
+//structure qui doit être passée en argument pour les threads qui gèrent la factorisation!
+struct param{
+	int numero; //numéro de l'item et donc des entrées des tableaux qui le concernent!
+
+	int N; //indique la taille des tableaux d'échange prod-cons
+	sem_t empty1; //echange dans prod-cons 1
+	sem_t full1;  //echange dans prod-cons 1
+ 	int **tabNbr;   //echange dans prod-cons 1
+
+	struct prime *list; //reférence vers la liste des nb premiers
+
+	sem_t empty2; //echange dans prod-cons 2
+	sem_t full2;  //echange dans prod-cons 2
+
+	int **tabFact; //echange dans le prod-cons 2
+};
+
+void *f(void *structure){
+	int boolean = 1;
+	long nombre;
+	long fichier;
+	int parcour;
+	while(boolean){ //tant qu'il y a des chiffres a factoriser. 
+		sem_wait(&full1); //attente de chiffre.	
+		phtread_mutex_lock(&mutex1);
+		parcour =0;
+		do{   // les threads peuvent aller chercher les nombre n'importe ou dans le premier buffer. 
+			//
+			//
+			if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides");}
+			//A RETIRER
+			
+			nombre = tab1[0][parcour];
+			fichier = tab1[1][parcour];
+		}while(nombre==0);
+		pthread_mutex_unlock(&mutex1);
+		sem_post(&empty1);
+		if(nombre ==-1){ boolean == 0; //plus de nombre a tester
+		}
+		else{ 
+			
+		}
+	}
+		
+		
+
+}
