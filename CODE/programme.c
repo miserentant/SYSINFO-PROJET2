@@ -31,14 +31,12 @@ int countSource;
 
 //fonction d'insertion de nbr dans le tableau
 void insert(long nbr, int stdin_b,int pos){
-printf("WAITING FOR EMPTY...\n");
 err = sem_wait(&empty1);
 	if(pthread_mutex_lock(&mutex1)==0){
 		int boolean= TRUE;
 		int iterator =0;
 		while(boolean==TRUE){
 			if(tabNbr[iterator]== (long) 0){
-				printf("Ajout de: %ld\n",nbr);
 				tabNbr[0][iterator]=nbr;
 				boolean=FALSE;
 				if(stdin_b==TRUE){
@@ -58,7 +56,6 @@ err = sem_post(&full1);
 
 //fonction de chargement de nombre via des fichiers locaux.
 void * importFromFile(void * tabl){
-printf("lancement thread...\n");
 int it;
 struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
 const char **tabn;
@@ -100,13 +97,12 @@ pthread_t file;
 
 //recherche des différents données sur les paramètres
 for(i=1;i<argc;i++){
-	if(strcmp("-maxthreads",argv[i])==0)
+	if(strcmp("-maxthreads",argv[i])==0){
 	N=atoi(argv[i+1]);
-
-	if(strcmp("-stdin",argv[i])==0)
-	stdin_bool = TRUE;
-
-	if(strlen(argv[i])>13){ //nombre de caractère nécessaire pour une URL valide
+	i++;}
+	else if(strcmp("-stdin",argv[i])==0){
+	stdin_bool = TRUE;}
+	else if(strlen(argv[i])>13){ //nombre de caractère nécessaire pour une URL valide
 		if(argv[i][4]==':'){
 			sizetabUrl++;
 		} else {
@@ -118,12 +114,15 @@ for(i=1;i<argc;i++){
 	
 }
 
+
 //création des tableau d'argument par type
 tabFile = malloc(sizetabFile*sizeof(char *));
 tabUrl = malloc(sizetabFile*sizeof(char *));
 int runnerf=0;
 int runnerurl=0;
 for(i=1;i<argc;i++){
+	if(strcmp("-maxthreads",argv[i])==0 || strcmp("-stdin",argv[i])==0){
+	i++;} else 
 	if(strlen(argv[i])>13){ //nombre de caractère nécessaire pour une URL valide
 		if(argv[i][4]==':'){
 			tabFile[runnerf] = argv[i];
