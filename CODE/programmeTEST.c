@@ -258,6 +258,7 @@ err = sem_post(&full1);
 
 //fonction de chargement de nombre via des fichiers locaux.
 void * importFromFile(void * tabl){
+printf("THREAD STARTED\n");
 int it;
 struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
 const char **tabn;
@@ -359,7 +360,7 @@ if(stdin_bool){
 printf("STDIN LOCATED\n");
 }
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
-sleep(10);
+sleep(5);
 
 
 return(EXIT_SUCCESS);
