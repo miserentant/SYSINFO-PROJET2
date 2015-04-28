@@ -453,7 +453,30 @@ while(boolean_wait){
 }
 
 err=pthread_join(compteur,NULL);
-
+int retour;
+int nbdefacteur=0; //nombre de nombre premiers qui ne sont facteur qu'une fois.
+int fichierretour;
+struct prime *run=Arg1->list;
+struct prime *suivant;
+while(run!=NULL){
+	if(list->compteur==1){
+		retour=run->nombre;
+		fichierretour=run->fichier;
+		nbdefacteur++;
+	}
+	suivant=run->next;
+	free(run);
+	run=suivant;
+}
+if(nbdefacteur==0){
+	printf("Il y a plusieur nombre premier qui ont été utilisé qu'une fois!\n");
+}
+else{
+	printf("Le facteur recherché est : %d , il a été trouvé dans le fichier (à transformé en string...) : %d\n",retour,fichierretour);
+}
+// PEUT ETRE QU'IL MANQUE UNE ACCOLADE
+//PAS oublier de libérer tableau!!
+//Regarder comment on est sensé retourner les valeurs!!!!
 
 
 return(EXIT_SUCCESS);
