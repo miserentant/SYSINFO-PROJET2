@@ -97,7 +97,7 @@ void init(){
 	Arg1->empty1 = empty1;
 	Arg1->full1=full1;
 	Arg1->mutex1=mutex1;
-	Arg1->tabNbr=tabNbr;
+	Arg1->tabNbr=tabNbr; //tu l'as déjà créé non?
 	Arg1->empty2 = empty2;
 	Arg1->full2=full2;
 	Arg1->mutex2=mutex2;
@@ -387,8 +387,6 @@ for(i=1;i<argc;i++){
 	
 }
 
-//intialisation
-init();
 
 //lancement des threads de récupération
 struct tabArgThread1 *arg = malloc(sizeof(struct tabArgThread1));
