@@ -73,7 +73,6 @@ for(it=0;it<sizetabFile;it++){
 		long *nbr = malloc(sizeof(long));
 		err = read(fd, (void *) nbr, sizeof(long));
 		*nbr = be64toh(*nbr);
-		printf("LONG: %ld\n",*nbr);
 		insert(*nbr, FALSE, it);
 	}
 	close(fd);
