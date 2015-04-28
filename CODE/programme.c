@@ -4,27 +4,82 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h> 
+#include <endian.h>
+#include <fcntl.h>
 #define TRUE 1
 #define FALSE 0
 #define OVER -5
+#define POSSTD 0
 //CHECK partout pour les boolean
 
+//structure d'argument (Thread1)
 struct tabArgThread1{
 	const char **tab;
 };
 
+//variables globales
 int sizetabUrl =0;
 int sizetabFile =0;
+int err;
+long **tabNbr;
+pthread_mutex_t mutex1;
+sem_t empty1;
+sem_t full1;
+int countSource;
+
+//fonction d'insertion de nbr dans le tableau
+void insert(long nbr, int stdin_b,int pos){
+printf("WAITING FOR EMPTY...\n");
+err = sem_wait(&empty1);
+	if(pthread_mutex_lock(&mutex1)==0){
+		int boolean= TRUE;
+		int iterator =0;
+		while(boolean==TRUE){
+			if(tabNbr[iterator]== (long) 0){
+				printf("Ajout de: %ld\n",nbr);
+				tabNbr[0][iterator]=nbr;
+				boolean=FALSE;
+				if(stdin_b==TRUE){
+				tabNbr[1][iterator]=POSSTD;
+				} else {
+				tabNbr[1][iterator]=pos;
+				}
+				
+			}
+			iterator++;
+		}
+		err = pthread_mutex_unlock(&mutex1);
+	}
+err = sem_post(&full1);
+
+}
 
 //fonction de chargement de nombre via des fichiers locaux.
 void * importFromFile(void * tabl){
+printf("lancement thread...\n");
 int it;
 struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
 const char **tabn;
 tabn=ptr->tab;
 
+int fd;
+int err = 1;
+const char *filename;
+
 for(it=0;it<sizetabFile;it++){
-printf("%s\n", tabn[it]);
+	filename = tabn[it];
+	printf("FILENAME: %s\n", filename);
+	fd = open(filename, O_RDONLY, NULL);	
+	while(err!=0){
+		long *nbr = malloc(sizeof(long));
+		err = read(fd, (void *) nbr, sizeof(long));
+		*nbr = be64toh(*nbr);
+		printf("LONG: %ld\n",*nbr);
+		insert(*nbr, FALSE, it);
+	}
+	close(fd);
 }
 return NULL;
 }
@@ -36,10 +91,6 @@ int N;
 int err;
 int i;
 
-pthread_mutex_t mutex1;
-sem_t empty1;
-sem_t full1;
-long **tabNbr;
 
 const char **tabFile;
 const char **tabUrl;
@@ -92,14 +143,11 @@ for(i=1;i<argc;i++){
 
 //création des différents outils
 err=pthread_mutex_init(&mutex1,NULL);
-if(err==0){
 err = sem_init(&empty1,0,N);
-if(err==0){
 err = sem_init(&full1,0,0);
-}
-}
 
-//allocation de mémoire du tableau
+
+//allocation de mémoire des tableaux
 tabNbr = malloc(sizeof(*tabNbr));
 tabNbr[0]=calloc(N,sizeof(long));
 tabNbr[1]=calloc(N,sizeof(long));
@@ -109,7 +157,7 @@ tabNbr[1]=calloc(N,sizeof(long));
 struct tabArgThread1 *arg = malloc(sizeof(struct tabArgThread1));
 arg->tab = tabFile;
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
-sleep(2);
+sleep(10);
 
 
 return(EXIT_SUCCESS);
