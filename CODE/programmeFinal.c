@@ -148,6 +148,9 @@ void *comptabilisateur(void *param){
 
 		pthread_mutex_unlock(&(structure->mutex2));
 		sem_post(&(structure->empty2));
+		if(nombre==-1){
+			boolean=FALSE;
+		}
 		if(mode==1){
 			run = structure->list;
 			while(run->nombre!=nombre){
@@ -420,15 +423,37 @@ while(boolean_wait){
 	do{
 		if(iterateur==N){
 			boolean_wait=FALSE;
-			elem=1;
+			elem=1;//permet de sortir du do...while
 			for(j=0;j<N;j++){
 				tabNbr[0][j]=-1;
+				sem_post(&full1);
 			}
 		}
 		elem = tabNbr[0][iterateur];
 	} while(elem==0);
 	err=pthread_mutex_unlock(&mutex1);
 }
+for(j=0;j<N;j++){
+	err=pthread_join(tabThread[j],NULL);
+}
+boolean_wait=1;
+while(boolean_wait){
+	iterateur =0;
+	err=pthread_mutex_lock(&mutex2);
+	do{
+		if(iterateur==N){
+			boolean_wait=FALSE;
+			elem=1;//permet de sortir du do...while
+				tabFact[0][0]=-1;
+				sem_post(&full2);
+		}
+		elem = tabFact[0][iterateur];
+	} while(elem==0);
+	err=pthread_mutex_unlock(&mutex2);
+}
+
+err=pthread_join(compteur,NULL);
+
 
 
 return(EXIT_SUCCESS);
