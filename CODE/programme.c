@@ -8,6 +8,7 @@
 #include <sys/stat.h> 
 #include <endian.h>
 #include <fcntl.h>
+#include <math.h>
 #define TRUE 1
 #define FALSE 0
 #define OVER -5
@@ -37,6 +38,7 @@ err = sem_wait(&empty1);
 		int iterator =0;
 		while(boolean==TRUE){
 			if(tabNbr[iterator]== (long) 0){
+				printf("ajout : %ld\n",nbr);
 				tabNbr[0][iterator]=nbr;
 				boolean=FALSE;
 				if(stdin_b==TRUE){
@@ -67,7 +69,6 @@ const char *filename;
 
 for(it=0;it<sizetabFile;it++){
 	filename = tabn[it];
-	printf("FILENAME: %s\n", filename);
 	fd = open(filename, O_RDONLY, NULL);	
 	while(err!=0){
 		long *nbr = malloc(sizeof(long));
@@ -84,7 +85,6 @@ return NULL;
 int main(int argc, const char *argv[]){
 
 int N;
-int err;
 int i;
 
 
@@ -154,9 +154,13 @@ tabNbr[1]=calloc(N,sizeof(long));
 //lancement des threads de récupération
 struct tabArgThread1 *arg = malloc(sizeof(struct tabArgThread1));
 arg->tab = tabFile;
+if(stdin_bool){
+printf("STDIN_OK\n");
+}
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
-sleep(10);
+sleep(5);
 
 
 return(EXIT_SUCCESS);
 }
+
