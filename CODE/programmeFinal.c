@@ -97,7 +97,7 @@ void init(){
 	Arg1->empty1 = empty1;
 	Arg1->full1=full1;
 	Arg1->mutex1=mutex1;
-	Arg1->tabNbr=tabNbr; //tu l'as déjà créé non?
+	Arg1->tabNbr=tabNbr;
 	Arg1->empty2 = empty2;
 	Arg1->full2=full2;
 	Arg1->mutex2=mutex2;
@@ -342,7 +342,8 @@ const char **tabFile;
 const char **tabUrl;
 int stdin_bool = FALSE;
 
-pthread_t file; 
+pthread_t file;
+
 
 //recherche des différents données sur les paramètres
 for(i=1;i<argc;i++){
@@ -387,6 +388,8 @@ for(i=1;i<argc;i++){
 	
 }
 
+//intialisation
+init();
 
 //lancement des threads de récupération
 struct tabArgThread1 *arg = malloc(sizeof(struct tabArgThread1));
@@ -395,7 +398,37 @@ if(stdin_bool){
 printf("STDIN LOCATED\n");
 }
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
+
+pthread_t tabThread[N];
+int j;
+for(j=0;j<N;j++){
+	err=pthread_create(&tabThread[j],NULL,&factorisation,(void *) Arg1);
+}
+
+pthread_t compteur;
+err=pthread_create(&compteur,NULL,&comptabilisateur,(void *) Arg2);
 sleep(5);
+
+err=pthread_join(file,NULL);//ajouter les autre join de chargement de nombre.
+
+int boolean_wait = TRUE;
+int elem;
+int iterateur;
+while(boolean_wait){
+	iterateur =0;
+	err=pthread_mutex_lock(&mutex1);
+	do{
+		if(iterateur==N){
+			boolean_wait=FALSE;
+			elem=1;
+			for(j=0;j<N;j++){
+				tabNbr[0][j]=-1;
+			}
+		}
+		elem = tabNbr[0][iterateur];
+	} while(elem==0);
+	err=pthread_mutex_unlock(&mutex1);
+}
 
 
 return(EXIT_SUCCESS);
