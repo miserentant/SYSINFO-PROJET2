@@ -3,17 +3,32 @@
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <unistd.h>
 #define TRUE 1
 #define FALSE 0
+#define OVER -5
 //CHECK partout pour les boolean
 
-void * importFromFile(char **tab){
-printf("OK\n");
+struct tabArgThread1{
+	const char **tab;
+};
+
+int sizetabUrl =0;
+int sizetabFile =0;
+
+//fonction de chargement de nombre via des fichiers locaux.
+void * importFromFile(void * tabl){
+int it;
+struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
+const char **tabn;
+tabn=ptr->tab;
+
+for(it=0;it<sizetabFile;it++){
+printf("%s\n", tabn[it]);
+}
+return NULL;
 }
 
-struct tabArgThread1{
-	char **tab;
-};
 
 int main(int argc, const char *argv[]){
 
@@ -27,9 +42,7 @@ sem_t full1;
 long **tabNbr;
 
 const char **tabFile;
-int sizetabFile =0;
 const char **tabUrl;
-int sizetabUrl =0;
 int stdin_bool = FALSE;
 
 pthread_t file; 
@@ -93,8 +106,11 @@ tabNbr[1]=calloc(N,sizeof(long));
 
 
 //lancement des threads de récupération
+struct tabArgThread1 *arg = malloc(sizeof(struct tabArgThread1));
+arg->tab = tabFile;
+err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
+sleep(2);
 
-err = pthread_create(&file, NULL,&importFromFile,(void *) tabFile);
 
 return(EXIT_SUCCESS);
 }
