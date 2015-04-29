@@ -360,7 +360,7 @@ int err = 1;
 
 for(it=0;it<sizetabFile;it++){//sizetabFile
 	const char *filename = tabn[it];
-	printf("----------------------------------------------------------------------------- passe au fichier : %s\n",filename);
+	printf(":>IMPORT FILE : %s\n",filename);
 	
 	fd = open(filename, O_RDONLY, NULL);
 	err=1;	
@@ -369,7 +369,7 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 		err = read(fd, (void *) nbr, sizeof(long));
 		if(err!=0){
 			*nbr = be64toh(*nbr);
-			insert(*nbr, FALSE, it);
+			insert(*nbr, FALSE, it+1);
 			// DEVRAIT PAS FAIRE free(nbr); ??
 		}
 	}
@@ -379,6 +379,49 @@ return NULL;
 }
 
 
+//retourne le nom de fichier du prime trouvé grace à son identifiant
+const char * getFileName(int id, const char **file, const char **url){
+const char *retour;
+	if(id==0){
+		retour="STDIN";
+	} 
+	else if(id>0) {
+		retour = file[id-1];
+	} else {
+		retour = url[-id-1];		
+	}
+return retour;
+}
+
+//Affiche les résultats
+void showResults(const char **file, const char **url){
+int retour;
+int nbdefacteur=0; //nombre de nombre premiers qui ne sont facteur qu'une fois.
+int fichierretour;
+struct prime *run=Arg1.list;
+struct prime *suivant;
+while(run!=NULL){
+	//printf("Facteur : %d  compteur : %d\n",run->nombre,run->compteur);
+	if(run->compteur==1){
+		retour=run->nombre;
+		fichierretour=run->fichier;
+		nbdefacteur++;
+	}
+	suivant=run->next;
+	free(run);
+	run=suivant;
+}
+printf("Prime factor count =  %d \n",nbdefacteur);
+if(nbdefacteur!=1){
+	printf("[ERROR]:More than one prime number used once\n");
+}
+else{
+	printf("Researched prime number = %d\n[Found in file/URL:'%s']\n",retour,getFileName(fichierretour,file,url));
+}
+}
+
+
+//MAIN FUNCTION
 int main(int argc, const char *argv[]){
 int i;
 
@@ -519,32 +562,12 @@ while(boolean_wait){
 }
 
 err=pthread_join(compteur,NULL);
-int retour;
-int nbdefacteur=0; //nombre de nombre premiers qui ne sont facteur qu'une fois.
-int fichierretour;
-struct prime *run=Arg1.list;
-struct prime *suivant;
-while(run!=NULL){
-	printf("Facteur : %d  compteur : %d\n",run->nombre,run->compteur);
-	if(run->compteur==1){
-		retour=run->nombre;
-		fichierretour=run->fichier;
-		nbdefacteur++;
-	}
-	suivant=run->next;
-	free(run);
-	run=suivant;
-}
-printf("nbdefacteur : %d \n",nbdefacteur);
-if(nbdefacteur!=1){
-	printf("Plus d'un nb premier utilisé qu'une fois\n");
-}
-else{
-	printf("Le facteur recherché est : %d , il a été trouvé dans le fichier (à transformé en string...) : %d\n",retour,fichierretour);
-}
+
+showResults(tabFile, tabUrl);
+
 
 //PAS oublier de libérer tableau!!
 //Regarder comment on est sensé retourner les valeurs!!!!
-printf("%s\n",tabFile[1]);
+//printf("%s\n",tabFile[1]);
 return(EXIT_SUCCESS);
 }
