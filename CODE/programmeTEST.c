@@ -166,7 +166,7 @@ void *comptabilisateur(void *param){
 			printf("ShutDown Comptabilisateur!\n");
 			boolean=FALSE;
 		}
-		if(mode==1){
+		else if(mode==1){
 			printf("Requete d'augmentation de compteur en cours!\n");
 			run = structure->list;
 			while(run->nombre!=nombre){
@@ -483,9 +483,10 @@ while(boolean_wait){
 				printf("Le nombre mis dans le tabNbr = %ld\n",tabNbr[0][j]);
 				sem_post(&full1);
 			}
-		}
+		} else {
 		elem = tabNbr[0][iterateur];
 		iterateur++;
+		}
 	} while(elem==0);
 	err=pthread_mutex_unlock(&mutex1);
 }
@@ -493,7 +494,7 @@ printf("Devrait y avoir des shutdown!\n");
 for(j=0;j<N;j++){
 	err=pthread_join(tabThread[j],NULL);
 }
-
+printf("THREAD 2 TYPE SHUT\n");
 boolean_wait=1;
 while(boolean_wait){
 	iterateur =0;
@@ -505,8 +506,10 @@ while(boolean_wait){
 			tabFact[0][0]=-1;
 			// fichier = (structure->tabNbr)[1][parcour]; C'est quoi cette daube?
 			sem_post(&full2);
-		}
+		} else {
 		elem = tabFact[0][iterateur];
+		iterateur++;
+		}
 	} while(elem==0);
 	err=pthread_mutex_unlock(&mutex2);
 }
