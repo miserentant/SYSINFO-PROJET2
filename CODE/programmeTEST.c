@@ -18,26 +18,6 @@
 
 
 
-
-
-
-
-
-// J'ai retirer les semaphores/mutex des structures!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //structure d'argument (Thread1)
 struct tabArgThread1{
 	const char **tab;
@@ -95,6 +75,8 @@ sem_t empty2;
 sem_t full2;
 struct param1 Arg1;
 struct param2 Arg2;
+struct prime *list;
+struct prime *last;
 int countSource;
 
 //initialise les sémaphores/mutex ainsi que les structures d'arguments de threads
@@ -126,7 +108,8 @@ void init(){
 	//Arg1.full2=full2;
 	//Arg1.mutex2=mutex2;
 
-	struct prime *list = (struct prime *)malloc(sizeof(struct prime));
+	list = (struct prime *)malloc(sizeof(struct prime));
+	last = list;
 	list->nombre=2;
 	list->compteur=0;
 	list->next=NULL;
@@ -149,7 +132,8 @@ Cette fonction permet de calculer un argument
 */
 void *comptabilisateur(void *param){
 	struct param2 *structure =(struct param2 *)param;
-	struct prime *last = structure->list; //reférence vers le dernier nb premier de la liste chainée.
+	structure->tabFact = tabFact;
+	structure->list = list;
 	int boolean =TRUE;
 	int parcour;
 	int nombre;
@@ -165,14 +149,17 @@ void *comptabilisateur(void *param){
 			parcour++;
 			//
 			//
-			if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides");}
+			if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides\n");}
 			//A RETIRER
 			nombre = (structure->tabFact)[0][parcour];
 			(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		}while(nombre==0);
+		printf("NOMBRE=%d\n",nombre);
+		printf("TEST1\n");
 		mode = (structure->tabFact)[1][parcour];
+		printf("TEST2\n");
 		fichier = (structure->tabFact)[2][parcour];
-
+		printf("TEST3\n");
 		pthread_mutex_unlock(&mutex2);
 		sem_post(&empty2);
 		if(nombre==-1){
@@ -232,6 +219,7 @@ return NULL;
 void *factorisation(void *param){
 	
 	struct param1 *structure = (struct param1 *)param;
+	structure->tabFact = tabFact;
 	int boolean = TRUE;
 	long nombre;
 	long fichier;
@@ -265,11 +253,13 @@ void *factorisation(void *param){
 			printf("Va factoriser\n");
 			struct prime *run = structure->list;
 			printf("Test1\n");
-			while(nombre>1){
+			while(nombre> (long) 1){
 				printf("Test1\n");
 				if(nombre % ((long) run->nombre)==0){
-					printf("Divisible\n");
+					printf("TESTED FACTOR: %d\n", run->nombre);
+					printf("Divisible par %d\n", run->nombre);
 					nombre  = nombre / ((long) run->nombre);
+					printf("RESULT DIVISION=%ld\n", nombre/(long)run->nombre);
 					// Il faut incrémenter ce facteur en passant pas le dernier consomateur
 					parcour=-1; 
 					sem_wait(&empty2);
@@ -284,7 +274,7 @@ void *factorisation(void *param){
 					}while(test!=0);
 					(structure->tabFact)[0][parcour]=run->nombre; // Permet de dire que c'est ce facteur là.
 					(structure->tabFact)[1][parcour]=1; //permet de dire qu'il faut incrémenter de 1.
-					(structure->tabFact)[0][parcour]=(int) fichier;
+					(structure->tabFact)[2][parcour]=(int) fichier;
 					printf("Requete d'augmentation de compteur lancé!\n");
 					pthread_mutex_unlock(&mutex2);
 					sem_post(&full2);
@@ -310,9 +300,10 @@ void *factorisation(void *param){
 						printf("Arrive a acceder à tabFact2!\n");
 					}while(test!=0);
 					printf("Sort du do..while\n");
+					printf("TESTED FACTOR: %d\n", run->nombre);
 					(structure->tabFact)[0][parcour]=run->nombre; // Permet de dire après quelle nombre premier il faut chercher le suivant.
 					(structure->tabFact)[1][parcour]=0; //permet de dire qu'il faut creer un objet de type struct prime
-
+					(structure->tabFact)[2][parcour]=(int) fichier;
 					printf("Requete de calcul de nbr premier lancé!\n");
 					pthread_mutex_unlock(&mutex2);
 					sem_post(&full2);
@@ -372,7 +363,7 @@ int fd;
 int err = 1;
 const char *filename;
 
-for(it=0;it<sizetabFile;it++){
+for(it=0;it<sizetabFile;it++){//sizetabFile
 	filename = tabn[it];
 	printf("FILENAME: %s\n", filename);
 	fd = open(filename, O_RDONLY, NULL);	
@@ -455,16 +446,22 @@ printf("STDIN LOCATED\n");
 }
 
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
+printf("fichier chargés\n");
+
+sleep(1);
 
 pthread_t tabThread[N];
 int j;
 for(j=0;j<N;j++){
 	err=pthread_create(&tabThread[j],NULL,&factorisation,(void *) &Arg1);
 }
+sleep(1);
+
 
 pthread_t compteur;
 err=pthread_create(&compteur,NULL,&comptabilisateur,(void *) &Arg2);
-sleep(5);
+printf("fin compteur");
+sleep(1);
 
 err=pthread_join(file,NULL);//ajouter les autre join de chargement de nombre.
 
