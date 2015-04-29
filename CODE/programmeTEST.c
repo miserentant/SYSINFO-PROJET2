@@ -257,7 +257,7 @@ void *factorisation(void *param){
 				printf("Test1\n");
 				if(nombre % ((long) run->nombre)==0){
 					printf("TESTED FACTOR: %d\n", run->nombre);
-					printf("Divisible par %d\n", run->nombre);
+					printf("NUMBER %ld Divisible par %d\n",nombre, run->nombre);
 					nombre  = nombre / ((long) run->nombre);
 					printf("RESULT DIVISION=%ld\n", nombre/(long)run->nombre);
 					// Il faut incrémenter ce facteur en passant pas le dernier consomateur
@@ -368,11 +368,13 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 	printf("FILENAME: %s\n", filename);
 	fd = open(filename, O_RDONLY, NULL);	
 	while(err!=0){
-		long *nbr = malloc(sizeof(long));
+		long *nbr=malloc(sizeof(long));
 		err = read(fd, (void *) nbr, sizeof(long));
-		*nbr = be64toh(*nbr);
-		insert(*nbr, FALSE, it);
-		// DEVRAIT PAS FAIRE free(nbr); ??
+		if(err!=0){
+			*nbr = be64toh(*nbr);
+			insert(*nbr, FALSE, it);
+			// DEVRAIT PAS FAIRE free(nbr); ??
+		}
 	}
 	close(fd);
 }
@@ -464,7 +466,7 @@ printf("fin compteur");
 sleep(1);
 
 err=pthread_join(file,NULL);//ajouter les autre join de chargement de nombre.
-
+printf("A JOIN LE THREAD-FILE\n");
 int boolean_wait = TRUE;
 int elem;
 int iterateur;
@@ -477,11 +479,13 @@ while(boolean_wait){
 			boolean_wait=FALSE;
 			elem=1;//permet de sortir du do...while
 			for(j=0;j<N;j++){
-				tabNbr[0][j]=-1;
+				tabNbr[0][j]=-1; 
+				printf("Le nombre mis dans le tabNbr = %ld\n",tabNbr[0][j]);
 				sem_post(&full1);
 			}
 		}
 		elem = tabNbr[0][iterateur];
+		iterateur++;
 	} while(elem==0);
 	err=pthread_mutex_unlock(&mutex1);
 }
