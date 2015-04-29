@@ -142,7 +142,7 @@ void *comptabilisateur(void *param){
 	struct prime *run;
 	while(boolean){ // Touver un moyen de dire quand il faut arrêter!
 		sem_wait(&full2); //attente de chiffre.	
-		printf("Choppe une requete!\n");
+	
 		pthread_mutex_lock(&mutex2);
 		parcour =-1;
 		do{   
@@ -154,20 +154,19 @@ void *comptabilisateur(void *param){
 			nombre = (structure->tabFact)[0][parcour];
 			(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		}while(nombre==0);
-		printf("NOMBRE=%d  et  MODE=%d\n",nombre,mode);
-		printf("TEST1\n");
+		
 		mode = (structure->tabFact)[1][parcour];
-		printf("TEST2\n");
+		
 		fichier = (structure->tabFact)[2][parcour];
-		printf("TEST3\n");
+	
 		pthread_mutex_unlock(&mutex2);
 		sem_post(&empty2);
 		if(nombre==-1){
-			printf("ShutDown Comptabilisateur!\n");
+			
 			boolean=FALSE;
 		}
 		else if(mode==1){
-			printf("Requete d'augmentation de compteur en cours!\n");
+			
 			run = structure->list;
 			while(run->nombre!=nombre){
 				run = run->next;
@@ -177,12 +176,12 @@ void *comptabilisateur(void *param){
 			}
 			run->fichier=fichier;
 			run->compteur++;
-			printf("Requete d'augmentation de compteur finie!\n");
+			
 		}
 	//doit creer nombre premier suivant le nombre contenu dans "nombre". Seulement, pe qu'il a été calculé entre temps
 //du coup il faut test si le dernier nombre premier de la liste est pas plus grand ou egal à ce nombre...
-		else if(mode==0 && (nombre <= last->nombre) ){
-			printf("Requete de calcul recue et pas encore exécuté!\n");
+		else if(mode==0 && (nombre >= last->nombre) ){
+			
 			struct prime *diviseur = structure->list;
 			
 			int nombreatest = nombre+1;
@@ -202,15 +201,13 @@ void *comptabilisateur(void *param){
 			}	
 			struct prime *suite = (struct prime *)malloc(sizeof(struct prime));
 			suite->nombre = nombreatest;
-			printf("Calcul d'un nombre premier suivant : %d\n",nombreatest);
+			
 			suite->compteur = 0;
 			suite->next = NULL;
 			last->next=suite; 
 			last = suite;	
 		}
-		else { //A enlever	
-			printf("Le nombre premier suivant a été calculé entre temps.\n");
-		}
+		
 	}
 return NULL;
 }
@@ -238,7 +235,7 @@ void *factorisation(void *param){
 			//A RETIRER
 			
 			nombre = (structure->tabNbr)[0][parcour];
-			printf("Le nombre lu dans le buffer est : %ld\n",nombre);
+			
 			(structure->tabNbr)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre. 
 			parcour++;
 		}while(nombre==0);
@@ -247,19 +244,18 @@ void *factorisation(void *param){
 		pthread_mutex_unlock(&mutex1);
 		sem_post(&empty1);
 		if(nombre ==-1){ boolean =FALSE; //plus de nombre a tester
-		printf("Shut down d'un thread de type 2\n");
+		
 		}
 		else{  //Cas ou il y a un nombre a factoriser
-			printf("Va factoriser\n");
+			
 			struct prime *run = structure->list;
-			printf("Test1\n");
+			
 			while(nombre> (long) 1){
-				printf("Test1\n");
+				
 				if(nombre % ((long) run->nombre)==0){
-					printf("TESTED FACTOR: %d\n", run->nombre);
-					printf("NUMBER %ld Divisible par %d\n",nombre, run->nombre);
+					
 					nombre  = nombre / ((long) run->nombre);
-					printf("RESULT DIVISION=%ld\n", nombre/(long)run->nombre);
+				
 					// Il faut incrémenter ce facteur en passant pas le dernier consomateur
 					parcour=-1; 
 					sem_wait(&empty2);
@@ -268,20 +264,20 @@ void *factorisation(void *param){
 						parcour++;
 						if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées vides mais elles sont toutes non vides");}
 						//A RETIRER
-						printf("Arrive a acceder à tabFact2?\n");
+						
 						test=(structure->tabFact)[0][parcour];
-						printf("Arrive a acceder à tabFact2!\n");
+						
 					}while(test!=0);
 					(structure->tabFact)[0][parcour]=run->nombre; // Permet de dire que c'est ce facteur là.
 					(structure->tabFact)[1][parcour]=1; //permet de dire qu'il faut incrémenter de 1.
 					(structure->tabFact)[2][parcour]=(int) fichier;
-					printf("Requete d'augmentation de compteur lancé!\n");
+
 					pthread_mutex_unlock(&mutex2);
 					sem_post(&full2);
 					
 				}
 				else if(run->next==NULL){
-					printf("Devrait rentrer ici au debut si pas divisible\n");
+
 					// Il faut calculer le nombre premier suivent en passant par le dernier consomateur
 					// Dans prime.c je faisais : run = ajoutprime(list,run);
 					parcour=-1; 
@@ -292,19 +288,18 @@ void *factorisation(void *param){
 						
 						parcour++;
 						
-						//if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides");}
-						printf("Pas oublier d'enlever le printf precendant du mode 'commentaire'\n");
+						if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides");}
+						
 						//A RETIRER
-						printf("Arrive a acceder à tabFact2?\n");
+						
 						test=(structure->tabFact)[0][parcour];
-						printf("Arrive a acceder à tabFact2!\n");
+						
 					}while(test!=0);
-					printf("Sort du do..while\n");
-					printf("TESTED FACTOR: %d\n", run->nombre);
+					
 					(structure->tabFact)[0][parcour]=run->nombre; // Permet de dire après quelle nombre premier il faut chercher le suivant.
 					(structure->tabFact)[1][parcour]=0; //permet de dire qu'il faut creer un objet de type struct prime
 					(structure->tabFact)[2][parcour]=(int) fichier;
-					printf("Requete de calcul de nbr premier lancé!\n");
+					
 					pthread_mutex_unlock(&mutex2);
 					sem_post(&full2);
 				}
@@ -333,7 +328,7 @@ err = sem_wait(&empty1);
 		int iterator =0;
 		while(boolean){
 			if(tabNbr[0][iterator]== 0){ // Putain charles, ta merde m'a bien fait iech.
-				printf("à la position %d, le nombre ajouté est : %ld\n ",iterator,nbr);
+				
 				tabNbr[0][iterator]=nbr;
 				boolean=FALSE;
 				if(stdin_b==TRUE){
@@ -353,7 +348,7 @@ err = sem_post(&full1);
 
 //fonction de chargement de nombre via des fichiers locaux.
 void * importFromFile(void * tabl){
-printf("THREAD STARTED\n");
+
 int it;
 struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
 const char **tabn;
@@ -361,12 +356,14 @@ tabn=ptr->tab;
 
 int fd;
 int err = 1;
-const char *filename;
+//const char *filename;
 
 for(it=0;it<sizetabFile;it++){//sizetabFile
-	filename = tabn[it];
-	printf("FILENAME: %s\n", filename);
-	fd = open(filename, O_RDONLY, NULL);	
+	const char *filename = tabn[it];
+	printf("----------------------------------------------------------------------------- passe au fichier : %s\n",filename);
+	
+	fd = open(filename, O_RDONLY, NULL);
+	err=1;	
 	while(err!=0){
 		long *nbr=malloc(sizeof(long));
 		err = read(fd, (void *) nbr, sizeof(long));
@@ -444,11 +441,11 @@ init();
 struct tabArgThread1 *arg = malloc(sizeof(struct tabArgThread1));
 arg->tab = tabFile;
 if(stdin_bool){
-printf("STDIN LOCATED\n");
+
 }
 
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
-printf("fichier chargés\n");
+
 
 sleep(1);
 
@@ -462,11 +459,11 @@ sleep(1);
 
 pthread_t compteur;
 err=pthread_create(&compteur,NULL,&comptabilisateur,(void *) &Arg2);
-printf("fin compteur");
+
 sleep(1);
 
 err=pthread_join(file,NULL);//ajouter les autre join de chargement de nombre.
-printf("A JOIN LE THREAD-FILE\n");
+
 int boolean_wait = TRUE;
 int elem;
 int iterateur;
@@ -474,31 +471,37 @@ int iterateur;
 while(boolean_wait){
 	iterateur =0;
 	err=pthread_mutex_lock(&mutex1);
-	do{
+	elem= 0;
+	while(elem==0){
+	
+		
 		if(iterateur==N){
 			boolean_wait=FALSE;
 			elem=1;//permet de sortir du do...while
+			
 			for(j=0;j<N;j++){
 				tabNbr[0][j]=-1; 
-				printf("Le nombre mis dans le tabNbr = %ld\n",tabNbr[0][j]);
+				
 				sem_post(&full1);
 			}
-		} else {
-		elem = tabNbr[0][iterateur];
-		iterateur++;
 		}
-	} while(elem==0);
+		else{
+			elem = tabNbr[0][iterateur];
+			iterateur++;
+		}
+	} 
 	err=pthread_mutex_unlock(&mutex1);
 }
-printf("Devrait y avoir des shutdown!\n");
+
 for(j=0;j<N;j++){
 	err=pthread_join(tabThread[j],NULL);
 }
-printf("THREAD 2 TYPE SHUT\n");
+
 boolean_wait=1;
 while(boolean_wait){
 	iterateur =0;
 	err=pthread_mutex_lock(&mutex2);
+
 	do{
 		if(iterateur==N){
 			boolean_wait=FALSE;
@@ -506,9 +509,10 @@ while(boolean_wait){
 			tabFact[0][0]=-1;
 			// fichier = (structure->tabNbr)[1][parcour]; C'est quoi cette daube?
 			sem_post(&full2);
-		} else {
-		elem = tabFact[0][iterateur];
-		iterateur++;
+		}
+		else{
+			elem = tabFact[0][iterateur];
+			iterateur++;
 		}
 	} while(elem==0);
 	err=pthread_mutex_unlock(&mutex2);
@@ -521,6 +525,7 @@ int fichierretour;
 struct prime *run=Arg1.list;
 struct prime *suivant;
 while(run!=NULL){
+	printf("Facteur : %d  compteur : %d\n",run->nombre,run->compteur);
 	if(run->compteur==1){
 		retour=run->nombre;
 		fichierretour=run->fichier;
@@ -530,8 +535,9 @@ while(run!=NULL){
 	free(run);
 	run=suivant;
 }
-if(nbdefacteur==0){
-	printf("Il y a plusieur nombre premier qui ont été utilisé qu'une fois!\n");
+printf("nbdefacteur : %d \n",nbdefacteur);
+if(nbdefacteur!=1){
+	printf("Plus d'un nb premier utilisé qu'une fois\n");
 }
 else{
 	printf("Le facteur recherché est : %d , il a été trouvé dans le fichier (à transformé en string...) : %d\n",retour,fichierretour);
@@ -539,7 +545,6 @@ else{
 
 //PAS oublier de libérer tableau!!
 //Regarder comment on est sensé retourner les valeurs!!!!
-
-
+printf("%s\n",tabFile[1]);
 return(EXIT_SUCCESS);
 }
