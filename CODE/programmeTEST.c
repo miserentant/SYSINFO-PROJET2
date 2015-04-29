@@ -154,7 +154,7 @@ void *comptabilisateur(void *param){
 			nombre = (structure->tabFact)[0][parcour];
 			(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		}while(nombre==0);
-		printf("NOMBRE=%d\n",nombre);
+		printf("NOMBRE=%d  et  MODE=%d\n",nombre,mode);
 		printf("TEST1\n");
 		mode = (structure->tabFact)[1][parcour];
 		printf("TEST2\n");
@@ -181,7 +181,7 @@ void *comptabilisateur(void *param){
 		}
 	//doit creer nombre premier suivant le nombre contenu dans "nombre". Seulement, pe qu'il a été calculé entre temps
 //du coup il faut test si le dernier nombre premier de la liste est pas plus grand ou egal à ce nombre...
-		else if(mode==0 && (nombre < last->nombre) ){
+		else if(mode==0 && (nombre <= last->nombre) ){
 			printf("Requete de calcul recue et pas encore exécuté!\n");
 			struct prime *diviseur = structure->list;
 			
