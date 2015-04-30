@@ -9,6 +9,7 @@
 #include <endian.h>
 #include <fcntl.h>
 #include <math.h>
+#include "curlopen.h"
 #define TRUE 1
 #define FALSE 0
 #define OVER -5
@@ -346,6 +347,38 @@ err = sem_post(&full1);
 
 }
 
+//fonction de chargement de nombre via un serveur distant.
+void * importFromUrl(void * tabl){
+
+int it;
+struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
+const char **tabn;
+tabn=ptr->tab;
+
+URL_FILE * file;
+size_t err = 1;
+//const char *filename;
+
+for(it=0;it<sizetabUrl;it++){
+	const char *filename = tabn[it];
+	printf(":>IMPORT URL : %s\n",filename);
+	
+	file = url_fopen(filename, "r");
+	err=1;	
+	while(err!=0){
+		long *nbr=malloc(sizeof(long));
+		err = url_fread((void *) nbr, sizeof(long),1,file);
+		if(err!=0){
+			*nbr = be64toh(*nbr);
+			insert(*nbr, FALSE, -it-1);
+			// DEVRAIT PAS FAIRE free(nbr); ??
+		}
+	}
+	url_fclose(file);
+}
+return NULL;
+}
+
 //fonction de chargement de nombre via des fichiers locaux.
 void * importFromFile(void * tabl){
 
@@ -430,6 +463,7 @@ const char **tabUrl;
 int stdin_bool = FALSE;
 
 pthread_t file;
+pthread_t url;
 
 //recherche des différents données sur les paramètres
 for(i=1;i<argc;i++){
@@ -440,8 +474,9 @@ for(i=1;i<argc;i++){
 	i++;}
 	else if(strcmp("-stdin",argv[i])==0){
 	stdin_bool = TRUE;}
-	else if(strlen(argv[i])>13){ //nombre de caractère nécessaire pour une URL valide
+	else if(strlen(argv[i])>9){ //nombre de caractère nécessaire pour une URL valide
 		if(argv[i][4]==':'){
+			printf("url trouvée");
 			sizetabUrl++;
 		} else {
 			sizetabFile++;
@@ -461,13 +496,13 @@ int runnerurl=0;
 for(i=1;i<argc;i++){
 	if(strcmp("-maxthreads",argv[i])==0 || strcmp("-stdin",argv[i])==0){
 	i++;} else 
-	if(strlen(argv[i])>13){ //nombre de caractère nécessaire pour une URL valide
+	if(strlen(argv[i])>9){ //nombre de caractère nécessaire pour une URL valide A CHANGER P E
 		if(argv[i][4]==':'){
-			tabFile[runnerf] = argv[i];
-			runnerf++;
-		} else {
 			tabUrl[runnerurl] = argv[i];
 			runnerurl++;
+		} else {
+			tabFile[runnerf] = argv[i];
+			runnerf++;
 		}
 	} else {
 		tabFile[runnerf] = argv[i];
@@ -480,32 +515,32 @@ for(i=1;i<argc;i++){
 //intialisation
 init();
 
+//création des arguments pour les threads de récupération
+struct tabArgThread1 *arg1 = malloc(sizeof(struct tabArgThread1));
+arg1->tab = tabFile;
+struct tabArgThread1 *arg2 = malloc(sizeof(struct tabArgThread1));
+arg2->tab = tabUrl;
+
 //lancement des threads de récupération
-struct tabArgThread1 *arg = malloc(sizeof(struct tabArgThread1));
-arg->tab = tabFile;
 if(stdin_bool){
 
 }
+err = pthread_create(&file, NULL,&importFromFile,(void *) arg1);
+err = pthread_create(&url, NULL,&importFromUrl,(void *) arg2);
 
-err = pthread_create(&file, NULL,&importFromFile,(void *) arg);
-
-
-sleep(1);
 
 pthread_t tabThread[N];
 int j;
 for(j=0;j<N;j++){
 	err=pthread_create(&tabThread[j],NULL,&factorisation,(void *) &Arg1);
 }
-sleep(1);
-
 
 pthread_t compteur;
 err=pthread_create(&compteur,NULL,&comptabilisateur,(void *) &Arg2);
 
-sleep(1);
 
-err=pthread_join(file,NULL);//ajouter les autre join de chargement de nombre.
+err=pthread_join(file,NULL);
+err=pthread_join(url,NULL);
 
 int boolean_wait = TRUE;
 int elem;
@@ -562,6 +597,8 @@ while(boolean_wait){
 }
 
 err=pthread_join(compteur,NULL);
+
+sleep(1);
 
 showResults(tabFile, tabUrl);
 

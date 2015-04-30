@@ -1,17 +1,18 @@
 CC=gcc
 CFLAGS=-Werror -Wall
-LFLAGS=-lpthread -lm
+LFLAGS=-lpthread -lm -lcurl
 EXEC=programme
+FILENAME=programmeTEST
 
 all:$(EXEC)
 
 programme: programme.o
-	$(CC) programme.o -o programme $(CFLAGS) $(LFLAGS)
+	$(CC) $(FILENAME).o -o $(EXEC) $(CFLAGS) $(LFLAGS)
 
 programme.o: programme.c
-	$(CC) -c programme.c -o programme.o $(CFLAGS) $(LFLAGS)
+	$(CC) -c $(FILENAME).c -o $(FILENAME).o $(CFLAGS) $(LFLAGS)
 
-osef: programme.c
-	gcc -c programme.c -o programme.o -lpthread
-	gcc programme.o -o programme -lpthread
+osef: $(FILENAME).c
+	gcc -c $(FILENAME).c -o $(FILENAME).o -lpthread -lm
+	gcc $(FILENAME).o -o $(FILENAME) -lpthread -lm
 
