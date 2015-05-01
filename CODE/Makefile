@@ -6,10 +6,10 @@ FILENAME=programmeTEST
 
 all:$(EXEC)
 
-programme: programme.o
+programme: $(FILENAME).o
 	$(CC) $(FILENAME).o -o $(EXEC) $(CFLAGS) $(LFLAGS)
 
-programme.o: programme.c
+programme.o: $(FILENAME).c
 	$(CC) -c $(FILENAME).c -o $(FILENAME).o $(CFLAGS) $(LFLAGS)
 
 osef: $(FILENAME).c
