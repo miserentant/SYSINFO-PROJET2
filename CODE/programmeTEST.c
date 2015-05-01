@@ -414,6 +414,27 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 return NULL;
 }
 
+//fonction de chargement de nombre via STDIN.
+void * importFromStdin(void * tabl){
+
+int err = 1;
+//const char *filename;
+
+	printf(":>READING FROM STDIN\n");	
+	err=1;	
+	while(err>0){
+		long *nbr=malloc(sizeof(long));
+		err = read(0, (void *) nbr, sizeof(long));
+		if(err>0){
+			*nbr = be64toh(*nbr);
+			insert(*nbr, FALSE, 0);
+			// DEVRAIT PAS FAIRE free(nbr); ??
+		} else if(err==-1){
+			printf("STDIN NOT FOUND\n");
+		}
+	}
+return NULL;
+}
 
 //retourne le nom de fichier du prime trouvé grace à son identifiant
 const char * getFileName(int id, const char **file, const char **url){
@@ -467,6 +488,7 @@ int stdin_bool = FALSE;
 
 pthread_t file;
 pthread_t url;
+pthread_t Stdin;
 
 //recherche des différents données sur les paramètres
 for(i=1;i<argc;i++){
@@ -525,7 +547,7 @@ arg2->tab = tabUrl;
 
 //lancement des threads de récupération
 if(stdin_bool){
-
+err = pthread_create(&Stdin, NULL, &importFromStdin, NULL);
 }
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg1);
 err = pthread_create(&url, NULL,&importFromUrl,(void *) arg2);
@@ -543,6 +565,7 @@ err=pthread_create(&compteur,NULL,&comptabilisateur,(void *) &Arg2);
 
 err=pthread_join(file,NULL);
 err=pthread_join(url,NULL);
+err=pthread_join(Stdin,NULL);
 
 int boolean_wait = TRUE;
 int elem;
