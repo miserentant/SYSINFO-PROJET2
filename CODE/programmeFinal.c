@@ -362,16 +362,18 @@ size_t err = 1;
 for(it=0;it<sizetabUrl;it++){
 	const char *filename = tabn[it];
 	printf(":>IMPORT URL : %s\n",filename);
-	
 	file = url_fopen(filename, "r");
 	err=1;	
-	while(err!=0){
+	while(err!=0 && err!=-1){
 		long *nbr=malloc(sizeof(long));
 		err = url_fread((void *) nbr, sizeof(long),1,file);
 		if(err!=0){
+			if(err!=-1){
 			*nbr = be64toh(*nbr);
 			insert(*nbr, FALSE, -it-1);
-			// DEVRAIT PAS FAIRE free(nbr); ??
+			} else {
+			printf("URL '%s' NOT FOUND\n",filename);
+			}
 		}
 	}
 	url_fclose(file);
@@ -397,13 +399,16 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 	
 	fd = open(filename, O_RDONLY, NULL);
 	err=1;	
-	while(err!=0){
+	while(err!=0 && err!=-1){
 		long *nbr=malloc(sizeof(long));
 		err = read(fd, (void *) nbr, sizeof(long));
 		if(err!=0){
+			if(err!=-1){
 			*nbr = be64toh(*nbr);
 			insert(*nbr, FALSE, it+1);
-			// DEVRAIT PAS FAIRE free(nbr); ??
+			} else {
+			printf("FILE '%s' NOT FOUND\n",filename);
+			}
 		}
 	}
 	close(fd);
@@ -476,7 +481,6 @@ for(i=1;i<argc;i++){
 	stdin_bool = TRUE;}
 	else if(strlen(argv[i])>9){ //nombre de caractère nécessaire pour une URL valide
 		if(argv[i][4]==':'){
-			printf("url trouvée");
 			sizetabUrl++;
 		} else {
 			sizetabFile++;
@@ -598,7 +602,7 @@ while(boolean_wait){
 
 err=pthread_join(compteur,NULL);
 
-sleep(1);
+
 
 showResults(tabFile, tabUrl);
 
