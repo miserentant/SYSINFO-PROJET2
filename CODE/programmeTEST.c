@@ -171,7 +171,7 @@ void *comptabilisateur(void *param){
 			run = structure->list;
 			while(run->nombre!=nombre){
 				run = run->next;
-				if(run==NULL){printf("Probleme, on donne un compteur d'un facteur a incrémenter mais le facteur n'existe pas\n");
+				if(run==NULL){printf("Probleme, on donne un compteur d'un facteur a incrémenter mais le facteur n'existe pas COMPTABILISATEUR\n");
 				//commentaire a enlever
 				}
 			}
@@ -232,7 +232,7 @@ void *factorisation(void *param){
 		do{   // les threads peuvent aller chercher les nombre n'importe ou dans le premier buffer. 
 			//
 			//
-			if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides");}
+			if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides FACTOR\n");}
 			//A RETIRER
 			
 			nombre = (structure->tabNbr)[0][parcour];
@@ -263,7 +263,7 @@ void *factorisation(void *param){
 					pthread_mutex_lock(&mutex2);
 					do{	
 						parcour++;
-						if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées vides mais elles sont toutes non vides");}
+						if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées vides mais elles sont toutes non vides FACTOR\n");}
 						//A RETIRER
 						
 						test=(structure->tabFact)[0][parcour];
@@ -289,7 +289,7 @@ void *factorisation(void *param){
 						
 						parcour++;
 						
-						if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides");}
+						if(parcour >= structure->N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides FACTOR\n");}
 						
 						//A RETIRER
 						
@@ -365,13 +365,14 @@ for(it=0;it<sizetabUrl;it++){
 	
 	file = url_fopen(filename, "r");
 	err=1;	
-	while(err!=0){
+	while(err>0){
 		long *nbr=malloc(sizeof(long));
 		err = url_fread((void *) nbr, sizeof(long),1,file);
-		if(err!=0){
+		if(err>0){
 			*nbr = be64toh(*nbr);
 			insert(*nbr, FALSE, -it-1);
-			// DEVRAIT PAS FAIRE free(nbr); ??
+		} else if(err==0){
+			printf("URL '%s' NOT FOUND\n",filename);
 		}
 	}
 	url_fclose(file);
@@ -397,13 +398,15 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 	
 	fd = open(filename, O_RDONLY, NULL);
 	err=1;	
-	while(err!=0){
+	while(err>0){
 		long *nbr=malloc(sizeof(long));
 		err = read(fd, (void *) nbr, sizeof(long));
-		if(err!=0){
+		if(err>0){
 			*nbr = be64toh(*nbr);
 			insert(*nbr, FALSE, it+1);
 			// DEVRAIT PAS FAIRE free(nbr); ??
+		} else if(err==-1){
+			printf("FILE '%s' NOT FOUND\n",filename);
 		}
 	}
 	close(fd);
@@ -476,7 +479,6 @@ for(i=1;i<argc;i++){
 	stdin_bool = TRUE;}
 	else if(strlen(argv[i])>9){ //nombre de caractère nécessaire pour une URL valide
 		if(argv[i][4]==':'){
-			printf("url trouvée");
 			sizetabUrl++;
 		} else {
 			sizetabFile++;
