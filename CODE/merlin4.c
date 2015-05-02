@@ -161,10 +161,10 @@ void *calculateur(void *param){
 			//A RETIRER
 			nombre = (structure->tabFact)[0][parcour];
 			mode = (structure->tabFact)[1][parcour];
-			(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
+			//(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		}while(nombre==0 || mode==1);
-		
-		
+		//Changer ici
+		(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		pthread_mutex_unlock(&mutex2);
 		sem_post(&empty2);
 		if(nombre==-1){
@@ -233,10 +233,10 @@ void *comptabilisateur(void *param){
 			//A RETIRER
 			nombre = (structure->tabFact)[0][parcour];
 			mode = (structure->tabFact)[1][parcour];
-			(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
+			//(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		}while(nombre==0 || mode==0);
-		
-		
+		//Changer ici
+		(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		
 		fichier = (structure->tabFact)[2][parcour];
 	
@@ -643,7 +643,7 @@ while(boolean_wait){
 			tabFact[0][0]=-1;
 			tabFact[0][1]=-1;
 			tabFact[1][0]=1;
-			tabFact[1][0]=0;
+			tabFact[1][1]=0;
 			// fichier = (structure->tabNbr)[1][parcour]; C'est quoi cette daube?
 			printf("On lui a dit de finir\n");
 			sem_post(&full2);
