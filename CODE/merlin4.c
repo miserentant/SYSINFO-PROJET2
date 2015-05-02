@@ -359,8 +359,9 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 			} else {
 			printf("FILE '%s' NOT FOUND\n",filename);
 			}
-			free(nbr); //HERE
+			
 		}
+		free(nbr); //HERE
 		
 	}
 	close(fd);
