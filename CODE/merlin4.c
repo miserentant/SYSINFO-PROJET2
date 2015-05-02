@@ -46,8 +46,6 @@ pthread_mutex_t mutex2;
 sem_t empty2;
 sem_t full2;
 sem_t full3;
-
-
 struct prime *list;
 struct prime *last;
 int countSource;
@@ -106,7 +104,7 @@ void *calculateur(void *param){
 	int fichier;
 	int mode; // Si 1, incrimenter un compteur, si 0, recherche d'un nb premier.
 	struct prime *run;
-	while(boolean){ // Touver un moyen de dire quand il faut arrêter!
+	while(boolean){
 		sem_wait(&full3); //attente de requete de calcul de nombre premier.
 	
 		pthread_mutex_lock(&mutex2);
@@ -228,8 +226,6 @@ return NULL;
 
 //fonction du thread factorisateur.
 void *factorisation(void *param){
-	
-	struct param1 *structure = (struct param1 *)param;
 	//structure->tabFact = tabFact;
 	int boolean = TRUE;
 	long nombre;
@@ -237,40 +233,27 @@ void *factorisation(void *param){
 	int parcour;
 	int test;
 	while(boolean){ //tant qu'il y a des chiffres a factoriser. 
-
 		sem_wait(&full1); //attente de chiffre.	
-	
 		pthread_mutex_lock(&mutex1);
 		parcour =0;
 		do{   // les threads peuvent aller chercher les nombre n'importe ou dans le premier buffer. 
-			//
-			//
 			if(parcour >= N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides3\n");}
 			//A RETIRER
-			
 			nombre = tabNbr[0][parcour];
-			
 			tabNbr[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre. 
 			parcour++;
 		}while(nombre==0);
-		
 		fichier = tabNbr[1][parcour-1];
 		pthread_mutex_unlock(&mutex1);
 		sem_post(&empty1);
 		if(nombre ==-1){ boolean =FALSE; //plus de nombre a tester
-		
 		}
 		else{  //Cas ou il y a un nombre a factoriser
-			
 			struct prime *run = list;
-			
 			while(nombre> (long) 1){
-				
 				if(nombre % ((long) run->nombre)==0){
-					
 					nombre  = nombre / ((long) run->nombre);
-				
-					// Il faut incrémenter ce facteur en passant pas le dernier consomateur
+					// Il faut incrémenter ce facteur en passant pas le dernier consomateur -> mettre dans le tableau d'échange
 					parcour=-1; 
 					sem_wait(&empty2);
 					pthread_mutex_lock(&mutex2);
@@ -278,42 +261,28 @@ void *factorisation(void *param){
 						parcour++;
 						if(parcour >= N){printf("On lui dit qu'il y a des entrées vides mais elles sont toutes non vides4\n");}
 						//A RETIRER
-						
 						test=tabFact[0][parcour];
-						
 					}while(test!=0);
 					tabFact[0][parcour]=run->nombre; // Permet de dire que c'est ce facteur là.
 					tabFact[1][parcour]=1; //permet de dire qu'il faut incrémenter de 1.
 					tabFact[2][parcour]=(int) fichier;
-
 					pthread_mutex_unlock(&mutex2);
-					sem_post(&full2);
-					
+					sem_post(&full2);		
 				}
 				else if(run->next==NULL){
-
-					// Il faut calculer le nombre premier suivent en passant par le dernier consomateur
-					// Dans prime.c je faisais : run = ajoutprime(list,run);
+					// Il faut calculer le nombre premier suivent en passant par le dernier consomateur-> le dire dans le tableau d'échange
 					parcour=-1; 
 					sem_wait(&empty2);
 					pthread_mutex_lock(&mutex2);
-					
 					do{	
-						
 						parcour++;
-						
-						if(parcour >= N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides5\n");}
-						
+						if(parcour >= N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides5\n");}				
 						//A RETIRER
-						
 						test=tabFact[0][parcour];
-						
 					}while(test!=0);
-					
 					tabFact[0][parcour]=run->nombre; // Permet de dire après quelle nombre premier il faut chercher le suivant.
 					tabFact[1][parcour]=0; //permet de dire qu'il faut creer un objet de type struct prime
-					tabFact[2][parcour]=(int) fichier;
-					
+					tabFact[2][parcour]=(int) fichier;		
 					pthread_mutex_unlock(&mutex2);
 					sem_post(&full3);
 					while(run->next==NULL){}//Boucle qui permet de ne lancer qu'une requete au thread comptabilisateur pour pas le submerger de requete identique
@@ -326,9 +295,6 @@ void *factorisation(void *param){
 	}
 	//Pe faut le mettre a la place de boolean = FALSE;
 	return NULL;
-		
-		
-
 }
 
 
@@ -342,8 +308,7 @@ err = sem_wait(&empty1);
 		int boolean= TRUE;
 		int iterator =0;
 		while(boolean){
-			if(tabNbr[0][iterator]== 0){ // Putain charles, ta merde m'a bien fait iech.
-				
+			if(tabNbr[0][iterator]== 0){ 		
 				tabNbr[0][iterator]=nbr;
 				boolean=FALSE;
 				if(stdin_b==TRUE){
