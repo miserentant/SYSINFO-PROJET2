@@ -62,19 +62,19 @@ void init(){
 	err = sem_init(&full3,0,0);
 
 	//allocation de mémoire des tableaux
-	tabNbr = malloc(2*sizeof(*tabNbr));
+	tabNbr = malloc(2*sizeof(*tabNbr)); //ok
 	tabNbr[0]=calloc(N,sizeof(long));
 	tabNbr[1]=calloc(N,sizeof(long));	
 	
-	tabFact = malloc(3*sizeof(*tabFact));
+	tabFact = malloc(3*sizeof(*tabFact)); //ok
 	tabFact[0]=calloc(N,sizeof(int));
 	tabFact[1]=calloc(N,sizeof(int));
 	tabFact[2]=calloc(N,sizeof(int));
 
 
 
-	list = (struct prime *)malloc(sizeof(struct prime));
-	struct prime *trois = (struct prime *)malloc(sizeof(struct prime));
+	list = (struct prime *)malloc(sizeof(struct prime)); //ok
+	struct prime *trois = (struct prime *)malloc(sizeof(struct prime));//ok
 	trois->nombre=3;
 	trois->compteur=0;
 	trois->next=NULL;
@@ -149,7 +149,7 @@ void *calculateur(void *param){
 					}
 				}
 			}	
-			struct prime *suite = (struct prime *)malloc(sizeof(struct prime));
+			struct prime *suite = (struct prime *)malloc(sizeof(struct prime)); //ok
 			suite->nombre = nombreatest;
 			
 			suite->compteur = 0;
@@ -302,14 +302,15 @@ void *factorisation(void *param){
 
 
 //fonction d'insertion de nbr dans le tableau
-void insert(long nbr, int stdin_b,int pos){
+void insert(long nbr, int stdin_b,int pos){ 
 err = sem_wait(&empty1);
 	err=pthread_mutex_lock(&mutex1);
 		int boolean= TRUE;
 		int iterator =0;
 		while(boolean){
 			if(tabNbr[0][iterator]== 0){ 		
-				tabNbr[0][iterator]=nbr;
+				tabNbr[0][iterator]=nbr; 
+
 				boolean=FALSE;
 				if(stdin_b==TRUE){
 				tabNbr[1][iterator]=POSSTD;
@@ -335,7 +336,8 @@ int it;
 struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
 const char **tabn;
 tabn=ptr->tab;
-
+//ICI
+//long nbr;
 int fd;
 int err = 1;
 //const char *filename;
@@ -347,16 +349,19 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 	fd = open(filename, O_RDONLY, NULL);
 	err=1;	
 	while(err!=0 && err!=-1){
-		long *nbr=malloc(sizeof(long));
-		err = read(fd, (void *) nbr, sizeof(long));
+		long *nbr=malloc(sizeof(long)); //ICI
+		
+		err = read(fd, (void *) nbr, sizeof(long));//ici
 		if(err!=0){
 			if(err!=-1){
-			*nbr = be64toh(*nbr);
-			insert(*nbr, FALSE, it+1);
+			*nbr = be64toh(*nbr);//ici
+			insert(*nbr, FALSE, it+1);//ici 
 			} else {
 			printf("FILE '%s' NOT FOUND\n",filename);
 			}
+			free(nbr); //HERE
 		}
+		
 	}
 	close(fd);
 }
@@ -376,7 +381,7 @@ int err = 1;
 		if(err!=0){
 			if(err!=-1){
 			*nbr = be64toh(*nbr);
-			insert(*nbr, FALSE, 0);
+			insert(*nbr, FALSE, 0); //ici 
 			} else {
 			printf("STDIN NOT FOUND\n");
 			}
@@ -404,6 +409,7 @@ return retour;
 //Affiche les résultats
 void showResults(const char **file, const char **url){
 int retour;
+int count=0; // A retirer
 int nbdefacteur=0; //nombre de nombre premiers qui ne sont facteur qu'une fois.
 int fichierretour;
 struct prime *run=list;
@@ -418,6 +424,7 @@ while(run!=NULL){
 	suivant=run->next;
 	free(run);
 	run=suivant;
+	count++;
 }
 printf("Prime factor count =  %d \n",nbdefacteur);
 if(nbdefacteur!=1){
@@ -425,6 +432,7 @@ if(nbdefacteur!=1){
 }
 else{
 	printf("Researched prime number = %d\n[Found in file/URL:'%s']\n",retour,getFileName(fichierretour,file,url));
+	printf("Count : %d", count);
 }
 }
 
@@ -464,8 +472,8 @@ for(i=1;i<argc;i++){
 
 
 //création des tableau d'argument par type
-tabFile = malloc(sizetabFile*sizeof(char *));
-tabUrl = malloc(sizetabFile*sizeof(char *));
+tabFile = malloc(sizetabFile*sizeof(char *)); //ok
+tabUrl = malloc(sizetabFile*sizeof(char *)); //ok
 int runnerf=0;
 int runnerurl=0;
 for(i=1;i<argc;i++){
@@ -554,7 +562,7 @@ for(j=0;j<N;j++){
 	err=pthread_join(tabThread[j],NULL);
 }
 
-boolean_wait=1;
+boolean_wait=TRUE;
 while(boolean_wait){
 	iterateur =0;
 	err=pthread_mutex_lock(&mutex2);
@@ -585,8 +593,18 @@ err=pthread_join(calcul,NULL);
 
 
 showResults(tabFile, tabUrl);
-
-
+//Libération de la mémoire
+free(arg1);
+free(arg2);
+free(tabFile);
+free(tabUrl);
+free(tabNbr[0]);
+free(tabNbr[1]);
+free(tabFact[0]);
+free(tabFact[1]);
+free(tabFact[2]);
+free(tabNbr);
+free(tabFact);
 //PAS oublier de libérer tableau!!
 //Regarder comment on est sensé retourner les valeurs!!!!
 //printf("%s\n",tabFile[1]);
