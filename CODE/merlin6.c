@@ -9,6 +9,8 @@
 #include <endian.h>
 #include <fcntl.h>
 #include <math.h>
+#include <sys/time.h>
+//#include "curlopen.h"
 //#include "curlopen.h"
 #define TRUE 1
 #define FALSE 0
@@ -37,6 +39,7 @@ int sizetabUrl =0;
 int sizetabFile =0;
 int N;
 int err;
+int *tabCalcul;
 long **tabNbr;
 int **tabFact;
 pthread_mutex_t mutex1;
@@ -45,6 +48,8 @@ sem_t full1;
 pthread_mutex_t mutex2;
 sem_t empty2;
 sem_t full2;
+pthread_mutex_t mutex3;
+sem_t empty3;
 sem_t full3;
 struct prime *list;
 struct prime *last;
@@ -59,6 +64,8 @@ void init(){
 	err=pthread_mutex_init(&mutex2,NULL);
 	err = sem_init(&empty2,0,N);
 	err = sem_init(&full2,0,0);
+	err=pthread_mutex_init(&mutex3,NULL);
+	err = sem_init(&empty3,0,1);
 	err = sem_init(&full3,0,0);
 
 	//allocation de mémoire des tableaux
@@ -66,10 +73,12 @@ void init(){
 	tabNbr[0]=calloc(N,sizeof(long));
 	tabNbr[1]=calloc(N,sizeof(long));	
 	
-	tabFact = malloc(3*sizeof(*tabFact)); //ok
+	tabFact = malloc(2*sizeof(*tabFact)); //ok
 	tabFact[0]=calloc(N,sizeof(int));
 	tabFact[1]=calloc(N,sizeof(int));
-	tabFact[2]=calloc(N,sizeof(int));
+	
+	tabCalcul=calloc(1,sizeof(int));
+
 
 
 
@@ -95,39 +104,25 @@ se charge de calculer les nombres premiers suivants
 
 void *calculateur(void *param){
 
-	struct param2 *structure =(struct param2 *)param;
+	//struct param2 *structure =(struct param2 *)param;
 	//structure->tabFact = tabFact;
 	//structure->list = list;
 	int boolean =TRUE;
 	int parcour;
 	int nombre;
-	int fichier;
-	int mode; // Si 1, incrimenter un compteur, si 0, recherche d'un nb premier.
-	struct prime *run;
+	//int fichier;
+
+	//struct prime *run;
 	while(boolean){
 		sem_wait(&full3); //attente de requete de calcul de nombre premier.
-	
-		pthread_mutex_lock(&mutex2);
-		parcour =-1;
-		do{   
-			parcour++;
-			//
-			//
-			if(parcour >= N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides 1\n");}
-			//A RETIRER
-			nombre = tabFact[0][parcour];
-			mode = tabFact[1][parcour];
-			//(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
-		}while(nombre==0 || mode==1);
-		//Changer ici
-		tabFact[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
-		pthread_mutex_unlock(&mutex2);
-		sem_post(&empty2);
+		pthread_mutex_lock(&mutex3);
+		nombre=*tabCalcul;
+		*tabCalcul=0; 
+		pthread_mutex_unlock(&mutex3);
+		sem_post(&empty3);
 		if(nombre==-1){
-			
 			boolean=FALSE;
-		}
-		
+		}	
 	//doit creer nombre premier suivant le nombre contenu dans "nombre". Seulement, pe qu'il a été calculé entre temps
 //du coup il faut test si le dernier nombre premier de la liste est pas plus grand ou egal à ce nombre...
 		else if( nombre >= last->nombre ){
@@ -167,34 +162,28 @@ return NULL;
 Fonction a donner en argument lors de la création du thread qui est le consomateur du deuxième schéma prod-cons et qui se charge d'incrémenter les compteurs
 */
 void *comptabilisateur(void *param){
-	struct param2 *structure =(struct param2 *)param;
+	//struct param2 *structure =(struct param2 *)param;
 	//structure->tabFact = tabFact;
 	//structure->list = list;
 	int boolean =TRUE;
 	int parcour;
 	int nombre;
 	int fichier;
-	int mode; // Si 1, incrimenter un compteur, si 0, recherche d'un nb premier.
 	struct prime *run;
 	while(boolean){ // Touver un moyen de dire quand il faut arrêter!
 		sem_wait(&full2); //attente de chiffre.	
-	
 		pthread_mutex_lock(&mutex2);
 		parcour =-1;
 		do{   
 			parcour++;
-			//
-			//
-			if(parcour >= N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides2\n");}
-			//A RETIRER
 			nombre = tabFact[0][parcour];
-			mode = tabFact[1][parcour];
-			//(structure->tabFact)[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
-		}while(nombre==0 || mode==0);
+
+
+		}while(nombre==0);
 		//Changer ici
 		tabFact[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
 		
-		fichier = tabFact[2][parcour];
+		fichier = tabFact[1][parcour];
 	
 		pthread_mutex_unlock(&mutex2);
 		sem_post(&empty2);
@@ -202,13 +191,11 @@ void *comptabilisateur(void *param){
 			
 			boolean=FALSE;
 		}
-		else if(mode==1){
+		else {
 			
 			run = list;
 			while(run->nombre!=nombre){
 				run = run->next;
-				if(run==NULL){printf("Probleme, on donne un compteur d'un facteur a incrémenter mais le facteur n'existe pas\n");
-				//commentaire a enlever
 				}
 			}
 			run->fichier=fichier;
@@ -217,10 +204,7 @@ void *comptabilisateur(void *param){
 		}
 	//doit creer nombre premier suivant le nombre contenu dans "nombre". Seulement, pe qu'il a été calculé entre temps
 //du coup il faut test si le dernier nombre premier de la liste est pas plus grand ou egal à ce nombre...
-		else{	printf("Problème !! devrait rentrer dans else if mode : %d\n",mode);
-		}
-		
-	}
+	
 return NULL;
 }
 
@@ -237,8 +221,6 @@ void *factorisation(void *param){
 		pthread_mutex_lock(&mutex1);
 		parcour =0;
 		do{   // les threads peuvent aller chercher les nombre n'importe ou dans le premier buffer. 
-			if(parcour >= N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides3\n");}
-			//A RETIRER
 			nombre = tabNbr[0][parcour];
 			tabNbr[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre. 
 			parcour++;
@@ -259,31 +241,21 @@ void *factorisation(void *param){
 					pthread_mutex_lock(&mutex2);
 					do{	
 						parcour++;
-						if(parcour >= N){printf("On lui dit qu'il y a des entrées vides mais elles sont toutes non vides4\n");}
-						//A RETIRER
 						test=tabFact[0][parcour];
 					}while(test!=0);
 					tabFact[0][parcour]=run->nombre; // Permet de dire que c'est ce facteur là.
-					tabFact[1][parcour]=1; //permet de dire qu'il faut incrémenter de 1.
-					tabFact[2][parcour]=(int) fichier;
+					tabFact[1][parcour]=(int) fichier;//Permet de dire de quel fichier il vient
 					pthread_mutex_unlock(&mutex2);
 					sem_post(&full2);		
 				}
 				else if(run->next==NULL){
 					// Il faut calculer le nombre premier suivent en passant par le dernier consomateur-> le dire dans le tableau d'échange
-					parcour=-1; 
-					sem_wait(&empty2);
-					pthread_mutex_lock(&mutex2);
-					do{	
-						parcour++;
-						if(parcour >= N){printf("On lui dit qu'il y a des entrées non vides mais elles sont vides5\n");}				
-						//A RETIRER
-						test=tabFact[0][parcour];
-					}while(test!=0);
-					tabFact[0][parcour]=run->nombre; // Permet de dire après quelle nombre premier il faut chercher le suivant.
-					tabFact[1][parcour]=0; //permet de dire qu'il faut creer un objet de type struct prime
-					tabFact[2][parcour]=(int) fichier;		
-					pthread_mutex_unlock(&mutex2);
+					
+					sem_wait(&empty3);
+					pthread_mutex_lock(&mutex3);
+					*tabCalcul=run->nombre;
+ 
+					pthread_mutex_unlock(&mutex3);
 					sem_post(&full3);
 					while(run->next==NULL){}//Boucle qui permet de ne lancer qu'une requete au thread comptabilisateur pour pas le submerger de requete identique
 				}
@@ -348,7 +320,6 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 	
 	fd = open(filename, O_RDONLY, NULL);
 	err=1;	
-	
 	while(err!=0 && err!=-1){
 		long *nbr=malloc(sizeof(long)); //ICI
 		
@@ -362,13 +333,15 @@ for(it=0;it<sizetabFile;it++){//sizetabFile
 			}
 			
 		}
-		free(nbr); 
+		free(nbr); //HERE
 		
 	}
 	close(fd);
 }
 return NULL;
 }
+
+//fonction de chargement de nombre via un serveur distant.
 
 //fonction de chargement de nombre via Stdin.
 void * importFromStdin(void * tabl){
@@ -388,6 +361,7 @@ int err = 1;
 			printf("STDIN NOT FOUND\n");
 			}
 		}
+		free(nbr);
 	}
 
 return NULL;
@@ -417,7 +391,6 @@ int fichierretour;
 struct prime *run=list;
 struct prime *suivant;
 while(run!=NULL){
-	//printf("Facteur : %d  compteur : %d\n",run->nombre,run->compteur);
 	if(run->compteur==1){
 		retour=run->nombre;
 		fichierretour=run->fichier;
@@ -428,21 +401,23 @@ while(run!=NULL){
 	run=suivant;
 	count++;
 }
-printf("Prime factor count =  %d \n",nbdefacteur);
 if(nbdefacteur!=1){
 	printf("[ERROR]:More than one prime number used once\n");
 }
 else{
 	printf("Researched prime number = %d\n[Found in file/URL:'%s']\n",retour,getFileName(fichierretour,file,url));
-	printf("Count : %d", count);
 }
 }
 
 
 //MAIN FUNCTION
 int main(int argc, const char *argv[]){
+struct timeval *t1 = malloc(sizeof(struct timeval));
+struct timeval *t2 = malloc(sizeof(struct timeval));
+struct timezone *t3 = malloc(sizeof(struct timezone));
+struct timezone *t4 = malloc(sizeof(struct timezone));
+err = gettimeofday(t1, t3);
 int i;
-
 const char **tabFile;
 const char **tabUrl;
 int stdin_bool = FALSE;
@@ -481,7 +456,7 @@ int runnerurl=0;
 for(i=1;i<argc;i++){
 	if(strcmp("-maxthreads",argv[i])==0 || strcmp("-stdin",argv[i])==0){
 	i++;} else 
-	if(strlen(argv[i])>9){ //nombre de caractère nécessaire pour une URL valide A CHANGER P E
+	if(strlen(argv[i])>9){ //nombre de caractère nécessaire pour une URL valide
 		if(argv[i][4]==':'){
 			tabUrl[runnerurl] = argv[i];
 			runnerurl++;
@@ -525,6 +500,7 @@ err=pthread_create(&compteur,NULL,&comptabilisateur,NULL);
 pthread_t calcul;
 err=pthread_create(&calcul,NULL,&calculateur,NULL);
 
+
 err=pthread_join(file,NULL);
 //err=pthread_join(url,NULL);
 if(stdin_bool){
@@ -564,31 +540,22 @@ for(j=0;j<N;j++){
 	err=pthread_join(tabThread[j],NULL);
 }
 
-boolean_wait=TRUE;
-while(boolean_wait){
-	iterateur =0;
-	err=pthread_mutex_lock(&mutex2);
+err = pthread_mutex_lock(&mutex3);
+sem_wait(&empty3);
+*tabCalcul = -1;
+sem_post(&full3);
+err = pthread_mutex_unlock(&mutex3);
 
-	do{
-		if(iterateur==N){
-			boolean_wait=FALSE;
-			elem=1;//permet de sortir du do...while
-			tabFact[0][0]=-1;
-			tabFact[0][1]=-1;
-			tabFact[1][0]=1;
-			tabFact[1][1]=0;
-			// fichier = (structure->tabNbr)[1][parcour]; C'est quoi cette daube?
-			printf("On lui a dit de finir\n");
-			sem_post(&full2);
-			sem_post(&full3);
-		}
-		else{
-			elem = tabFact[0][iterateur];
-			iterateur++;
-		}
-	} while(elem==0);
-	err=pthread_mutex_unlock(&mutex2);
+for(j=0;j<N;j++){
+	sem_wait(&empty2);
 }
+pthread_mutex_lock(&mutex2);
+for(j=0;j<N;j++){
+	tabFact[0][j]=-1;
+	sem_post(&full2);
+}
+pthread_mutex_unlock(&mutex2);
+
 
 err=pthread_join(compteur,NULL);
 err=pthread_join(calcul,NULL);
@@ -604,11 +571,18 @@ free(tabNbr[0]);
 free(tabNbr[1]);
 free(tabFact[0]);
 free(tabFact[1]);
-free(tabFact[2]);
+free(tabCalcul);
 free(tabNbr);
 free(tabFact);
+free(t1);
+free(t2);
+free(t3);
+free(t4);
+err = gettimeofday(t2, t4);
+int sec = ((int) t2->tv_sec - (int) t1->tv_sec);
+int microsec = ((int) t2->tv_usec - (int) t1->tv_usec);
+printf("Execution time= %d,%d\n",sec,microsec);
 //PAS oublier de libérer tableau!!
 //Regarder comment on est sensé retourner les valeurs!!!!
-//printf("%s\n",tabFile[1]);
 return(EXIT_SUCCESS);
 }
