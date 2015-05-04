@@ -507,34 +507,16 @@ if(stdin_bool){
 err=pthread_join(Stdin,NULL);
 }
 
-int boolean_wait = TRUE;
-int elem;
-int iterateur;
-
-while(boolean_wait){
-	iterateur =0;
-	err=pthread_mutex_lock(&mutex1);
-	elem= 0;
-	while(elem==0){
-	
-		
-		if(iterateur==N){
-			boolean_wait=FALSE;
-			elem=1;//permet de sortir du do...while
-			
-			for(j=0;j<N;j++){
-				tabNbr[0][j]=-1; 
-				
-				sem_post(&full1);
-			}
-		}
-		else{
-			elem = tabNbr[0][iterateur];
-			iterateur++;
-		}
-	} 
-	err=pthread_mutex_unlock(&mutex1);
+for(j=0;j<N;j++){
+	sem_wait(&empty1);
 }
+err = pthread_mutex_lock(&mutex1);
+for(j=0;j<N;j++){
+	tabNbr[0][j]=-1;
+	sem_post(&full1);
+}
+pthread_mutex_unlock(&mutex1);
+
 
 for(j=0;j<N;j++){
 	err=pthread_join(tabThread[j],NULL);
