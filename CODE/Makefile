@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-Werror -Wall
 LFLAGS=-lpthread -lm -lcurl
 EXEC=programme
-FILENAME=ProgFinal
+FILENAME=ProgrammeFinal
 
 all:$(EXEC)
 
