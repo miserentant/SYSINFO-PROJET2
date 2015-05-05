@@ -17,19 +17,20 @@ Notre programme est divisé en 4 phases principales distinctes:
 \begin{itemize}
 \item{Chargement des nombres: cette phase se compose d'une analyse des paramètres du programme suivie d'une phase de chargement des nombre à proprement parlée.)}
 \item{Factorisation des nombres: comme son nom l'indique, cette étape sert à factoriser les nombres obtenue grâce à la phase précédente en facteur premier.}
-\item{Traitement des facteurs premiers: chaque facteur produit par la factorisation et traité. Un compte de chacun des facteurs est tenu.}
+\item{Traitement des facteurs premiers: chaque facteur produit par la factorisation et traité. Un compte de chacun des facteurs est tenu. Les nombres premiers manquants sont également calculés}
 \item{Analyse des résultats: le facteur unique trouvé est cherché parmis les différents compteurs. Si plusieurs facteurs unique sont trouvés, une erreur est envoyée.}
 \end{itemize}
 
-Ces trois étapes se déroulent de manière simultanée grâce à l'utilisation de threads selon un double schéma de producteur/consommateur. Les chargements de nombres se font à raison d'un thread par type d'entrée de nombre. Plus précisément, chacun de ces threads itère sur un tableau contenant les différents noms de fichier ou adresses URL. Il y a donc trois threads de chargement de nombre.  La taille des buffers pour les deux schéma est de N. Ce choix n'est pas anodin, en effet il permet à N threads de factorisations fonctionner en simultanée. Le traitement des nombres se fait grâce à CHECK ICI LE NOMBRE DE THREADS un thread parcourant le second buffer qui met à jours les comptes des différents facteurs premiers trouvés.
-Une fois ces étapes faites, le programme principale analyse les compteurs obtenus.
+Les trois premières étapes se déroulent de manière simultanée grâce à l'utilisation de threads selon un double schéma de producteur/consommateur. Les chargements de nombres se font à raison d'un thread par type d'entrée de nombre. Plus précisément, chacun de ces threads itère sur un tableau contenant les différents noms de fichier ou adresses URL. Il y a donc trois threads de chargement de nombre.  La taille du buffer pour le premier schéma est de N et celle du deuxième buffer est de N+1. N places sont réservées pour les threads qui incremétentent les comptes et la dernière l'est pour le thread de calcul. Ce choix n'est pas anodin, en effet il permet à N threads de factorisations fonctionner en simultanée. L'incrémentation des compteurs se fait grâce à CHECK ICI LE NOMBRE DE THREADS de thread parcourant le second buffer qui met à jours les comptes des différents facteurs premiers trouvés et un thread qui calcul les nombres premiers manquant lorsque c'est nécessaire.
+Le thread qui calcul les nombres premiers est unique car le programme ne doit calculer qu'un nombre premier à la fois. 
+Une fois ces étapes faites, le programme principale analyse les compteurs obtenus(4eme étape).
 
 \section*{Mécanisme de synchronisation}
 Les différents échanges de données entre threads se font grâce à deux schémas de producteur/consommateur 
 
 \begin{itemize}
 \item{Premier schéma: [Producteur]=Threads de chargement de nombres $\Rightarrow$ sortie:nombres sur 64bits; [Consommateurs]=Threads de factorisation}
-\item{Second schéma: [Producteur]=Threads de factorisation $\Rightarrow$ sortie:nombres premiers; [Consommateurs]=Threads d'analyse de nombres premiers}
+\item{Second schéma: [Producteur]=Threads de factorisation $\Rightarrow$ sortie:nombres premiers; [Consommateurs1]=Threads qui gèrent les comptes des facteurs premiers, [Consammateur2]=Threads de calcul de nombre premiers}
 \end{itemize}
 
 L'implémentation de ces schémas est réalisée grâce à l'utilisation de sémaphores, permettant ainsi l'accès aux buffers.
@@ -41,7 +42,7 @@ Les structures utilisées sont les suivantes:
 
 \begin{itemize}
 \item{Premier schéma de producteur/consommateur: tableau de nombres de dimension [2xN]. La première dimension contient le nombre et la deuxième une référence vers le fichier d'origine}
-\item{Second schéma de producteur/consommateur: tableau de nombres de dimension [3xN]. La première dimension contient le nombre, la seconde un paramètre utile à l'algorithme de factorisation et la troisième une référence vers le fichier d'origine.}
+\item{Second schéma de producteur/consommateur: tableau de nombres de dimension [2xN]. La première dimension contient le nombre et la seconde une référence vers le fichier d'origine. Et un pointeur vers un nombre qui contient le dernier nombre premier lorsqu'il faut calculer le nombre premier suivant.}
 \item{Structure de nombre premier: structure contenant un nombre premier, le compte de celui-ci ainsi qu'une référence vers le fichier dans lequel la dernière itération de ce nombre a été trouvée.}
 \item{Liste chainée de structure de nombre premier: Liste des nombres premiers et leurs comptes. Elle est mise à jour si nécessaire.}
 \end{itemize}
@@ -59,33 +60,6 @@ Pour tester si un nombre est premier, notre programme teste s'il est divisible p
  
 \section*{Analyses de performances}
 
-Plusieurs tests de perfomance ont été effectués afin d'analyser la rapidité de l'implémentation de notre programme. Ceux-ci consistaient à changer le nombre de threads de factorisation pour des analyses de fichier de différentes tailles. Ces tests ont été réalisés avec une implémentation qui répondait le plus à notre idée initiale. Les résultats obtenus sont repris ici:
-
-\begin{figure}[ht!]
- \centering
- \includegraphics[scale=0.3]{Nanalys.png}
- \caption{Analyse de l'évolution du nombre de thread}
- \label{scheme1}
-\end{figure}
-
-Au vue des résultats obtenus, nous en avons déduit qu'il y avait un nombre de threads optimal pour chaque analyse. Ce nombre dépend de la taille du fichier ainsi que la grandeur des nombres analysés. Lorsque le nombre de thread est trop important, ceux-ci se gênent mutuellement lors de l'accès aux différents buffers. EXPLICATION. Nous avons alors effectué au analyse en fonction du nombre de threads consommateurs du second schéma:
-
-\begin{figure}[ht!]
- \centering
- \includegraphics[scale=0.3]{kAnalys.png}
- \caption{Analyse de l'évolution du nombre de thread}
- \label{scheme1}
-\end{figure}
-
-
-BLABLABLA. Après avoir adapté notre programme par rapport au résultats trouvés, nous avons es mesures différentes:
-
-\begin{figure}[ht!]
- \centering
- \includegraphics[scale=0.3]{NanalysOpti.png}
- \caption{Analyse de l'évolution du nombre de thread}
- \label{scheme1}
-\end{figure}
+Durant l'implémentation du projet, nous avons posé différents choix afin d'optimiser les performances temporelles de notre programme. Nous allons analyser ci-après les plus importantes d'entre elles qui nous semble importante à l'aide de graphiques réalisés sur matlab en fonction de résultats expérimentaux.
 
 \end{document}
-
