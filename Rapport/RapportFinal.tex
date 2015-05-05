@@ -4,6 +4,7 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage[top=3cm, bottom=3cm, left=2cm , right=2cm]{geometry}
 \begin{document}
 \author{Iserentant Merlin - Momin Charles}
 \title{Rapport projet 2: Factorisation de nombres}
@@ -62,4 +63,43 @@ Pour tester si un nombre est premier, notre programme teste s'il est divisible p
 
 Durant l'implémentation du projet, nous avons posé différents choix afin d'optimiser les performances temporelles de notre programme. Nous allons analyser ci-après les plus importantes d'entre elles qui nous semble importante à l'aide de graphiques réalisés sur matlab en fonction de résultats expérimentaux.
 
+Les premiers tests de performance ont été réalisés sur les machines en salle intel. Deux types de tests ont été effectués: varitation du nombre $N$ de threads de factorisation et variation du nombre de threads consommateurs du second buffer. Les résultats obtenus sont présentées aux figures 1 et 2.
+
+\begin{figure}[ht!]
+ \centering
+ \includegraphics[scale=0.4]{NanaOpt.png}
+ \caption{Variation du nombre de threads $N$}
+ \label{schemefig1}
+\end{figure}
+
+\begin{figure}[ht!]
+ \centering
+ \begin{center}
+ \includegraphics[scale=0.4]{kanaOpt.png} 
+ \end{center}
+ \caption{Variation du nombre de threads consommateurs}
+ \label{scheme1}
+\end{figure}
+
+L'analyse des résultats montre l'existence d'un nombre de thread optimale pour le traitement d'un fichier de taille définie, contenant des nombres de taille définie eux aussi. Dans le cas présent, ce nombre tourne au alentours de 4. La perte de performance provoquée par un nombre supérieur au nombre optimal vient de l'utilisation de mécanisme de synchronisation. Des threads présents en trop grand nombre ont plus de chance de se voir refuser l'accès à leurs section critique. En effet, les différents accès aux données nécessaires sont plus souvent déjà bloqués par un autre thread.
+
+De plus, la performance est liée au nombre de processeur utilisés par la machine. L'utilitaire "$Monitor$" du Linux indique que les machines de la salle Intel possèdent 4 CPUs actif. Afin de montrer l'importance de ce facteur dans les performance de programme, les résultats obtenus dans les même condition d'exécution sur une machine utilisant 8 CPUs sont montrés aux figures 3 et 4.
+
+\begin{figure}[ht!]
+ \centering
+ %\includegraphics[scale=0.4]{NanaOpt.png}
+ \caption{Variation du nombre de threads $N$}
+ \label{schemefig1}
+\end{figure}
+
+\begin{figure}[ht!]
+ \centering
+ \begin{center}
+ %\includegraphics[scale=0.4]{kanaOpt.png} 
+ \end{center}
+ \caption{Variation du nombre de threads consommateurs}
+ \label{scheme1}
+\end{figure}
+
+On observe que les graphes des figures 3 et 4 sont de même type que ceux des figures 1 et 2. Un décalage du nombre de thread optimal est cependant observable. Une piste possible d'explication est la suivante: vu le grand nombre de threads utilisés, la machine ne peut pas tous les executer en temps que thread physique. Beaucoup seront donc interrompus en cours d'éxecution afin de permettre à chacun des threads de s'exécuter. Pour le peu qu'un de ces thread ne s'interrompe dans sa section critique, il bloque alors l'accès au différentes ressources protégées par des méchanisme de synchronisation. Les autres threads sont alors à leurs tour bloqués, se qui provoque une perte de temps non-voulue. Le nombre de threads physiques possibles étant défini par le nombre de CPUs, une machine en disposant de plus verra son nombre de thread optimal augmenté.
 \end{document}
