@@ -59,6 +59,33 @@ Pour tester si un nombre est premier, notre programme teste s'il est divisible p
  
 \section*{Analyses de performances}
 
+Plusieurs tests de perfomance ont été effectués afin d'analyser la rapidité de l'implémentation de notre programme. Ceux-ci consistaient à changer le nombre de threads de factorisation pour des analyses de fichier de différentes tailles. Ces tests ont été réalisés avec une implémentation qui répondait le plus à notre idée initiale. Les résultats obtenus sont repris ici:
+
+\begin{figure}[ht!]
+ \centering
+ \includegraphics[scale=0.3]{Nanalys.png}
+ \caption{Analyse de l'évolution du nombre de thread}
+ \label{scheme1}
+\end{figure}
+
+Au vue des résultats obtenus, nous en avons déduit qu'il y avait un nombre de threads optimal pour chaque analyse. Ce nombre dépend de la taille du fichier ainsi que la grandeur des nombres analysés. Lorsque le nombre de thread est trop important, ceux-ci se gênent mutuellement lors de l'accès aux différents buffers. EXPLICATION. Nous avons alors effectué au analyse en fonction du nombre de threads consommateurs du second schéma:
+
+\begin{figure}[ht!]
+ \centering
+ \includegraphics[scale=0.3]{kAnalys.png}
+ \caption{Analyse de l'évolution du nombre de thread}
+ \label{scheme1}
+\end{figure}
+
+
+BLABLABLA. Après avoir adapté notre programme par rapport au résultats trouvés, nous avons es mesures différentes:
+
+\begin{figure}[ht!]
+ \centering
+ \includegraphics[scale=0.3]{NanalysOpti.png}
+ \caption{Analyse de l'évolution du nombre de thread}
+ \label{scheme1}
+\end{figure}
 
 \end{document}
 
