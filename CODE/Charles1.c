@@ -10,8 +10,6 @@
 #include <fcntl.h>
 #include <math.h>
 #include <sys/time.h>
-#include "curlopen.h"
-//#include "curlopen.h"
 #define TRUE 1
 #define FALSE 0
 #define OVER -5
@@ -286,39 +284,7 @@ err = sem_post(&full1);
 
 }
 
-//fonction de chargement de nombre via un serveur distant.
-void * importFromUrl(void * tabl){
 
-int it;
-struct tabArgThread1 *ptr = (struct tabArgThread1 *) tabl;
-const char **tabn;
-tabn=ptr->tab;
-
-URL_FILE * file;
-size_t err = 1;
-//const char *filename;
-
-for(it=0;it<sizetabUrl;it++){
-	const char *filename = tabn[it];
-	printf(":>IMPORT URL : %s\n",filename);
-	file = url_fopen(filename, "r");
-	err=1;	
-	while(err!=0 && err!=-1){
-		long *nbr=malloc(sizeof(long));
-		err = url_fread((void *) nbr, sizeof(long),1,file);
-		if(err!=0){
-			if(err!=-1){
-			*nbr = be64toh(*nbr);
-			insert(*nbr, FALSE, -it-1);
-			} else {
-			printf("URL '%s' NOT FOUND\n",filename);
-			}
-		}
-	}
-	url_fclose(file);
-}
-return NULL;
-}
 
 //fonction de chargement de nombre via des fichiers locaux.
 void * importFromFile(void * tabl){
@@ -515,7 +481,7 @@ if(stdin_bool){
 err=pthread_create(&Stdin, NULL, &importFromStdin, NULL);
 }
 err = pthread_create(&file, NULL,&importFromFile,(void *) arg1);
-err = pthread_create(&url, NULL,&importFromUrl,(void *) arg2);
+//err = pthread_create(&url, NULL,&importFromUrl,(void *) arg2);
 
 
 pthread_t tabThread[N];
@@ -533,7 +499,7 @@ err=pthread_create(&calcul,NULL,&calculateur,NULL);
 
 
 err=pthread_join(file,NULL);
-err=pthread_join(url,NULL);
+//err=pthread_join(url,NULL);
 if(stdin_bool){
 err=pthread_join(Stdin,NULL);
 }
