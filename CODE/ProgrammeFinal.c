@@ -573,10 +573,10 @@ for(j=0;j<N;j++){
 	sem_wait(&empty2);
 }
 pthread_mutex_lock(&mutex2);
-for(j=0;j<N;j++){
-	tabFact[0][j]=-1;
+
+	tabFact[0][0]=-1;
 	sem_post(&full2);
-}
+
 pthread_mutex_unlock(&mutex2);
 
 

@@ -42,6 +42,8 @@ int err;
 int *tabCalcul;
 long **tabNbr;
 int **tabFact;
+int indexNbr;
+int indexFact;
 pthread_mutex_t mutex1;
 sem_t empty1;
 sem_t full1;
@@ -60,24 +62,25 @@ int countSource;
 void init(){
 
 	err=pthread_mutex_init(&mutex1,NULL);
-	err = sem_init(&empty1,0,N);
+	err = sem_init(&empty1,0,2*N);
 	err = sem_init(&full1,0,0);
 	err=pthread_mutex_init(&mutex2,NULL);
-	err = sem_init(&empty2,0,N);
+	err = sem_init(&empty2,0,2*N);
 	err = sem_init(&full2,0,0);
 	err=pthread_mutex_init(&mutex3,NULL);
 	err = sem_init(&empty3,0,1);
 	err = sem_init(&full3,0,0);
 	err = pthread_mutex_init(&mutexfact,NULL);
-
+	indexNbr = -1;
+	indexFact = -1;
 	//allocation de mémoire des tableaux
 	tabNbr = malloc(2*sizeof(*tabNbr)); //ok
-	tabNbr[0]=calloc(N,sizeof(long));
-	tabNbr[1]=calloc(N,sizeof(long));	
+	tabNbr[0]=calloc(2*N,sizeof(long));
+	tabNbr[1]=calloc(2*N,sizeof(long));	
 	
 	tabFact = malloc(2*sizeof(*tabFact)); //ok
-	tabFact[0]=calloc(N,sizeof(int));
-	tabFact[1]=calloc(N,sizeof(int));
+	tabFact[0]=calloc(2*N,sizeof(int));
+	tabFact[1]=calloc(2*N,sizeof(int));
 	
 	tabCalcul=calloc(1,sizeof(int));
 
@@ -174,18 +177,10 @@ void *comptabilisateur(void *param){
 	while(boolean){ // Touver un moyen de dire quand il faut arrêter!
 		sem_wait(&full2); //attente de chiffre.	
 		pthread_mutex_lock(&mutex2);
-		parcour =-1;
-		do{   
-			parcour++;
-			nombre = tabFact[0][parcour];
-
-
-		}while(nombre==0);
-		//Changer ici
-		tabFact[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
-		
-		fichier = tabFact[1][parcour];
-	
+		nombre = tabFact[0][indexFact];
+		//tabFact[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre.
+		fichier = tabFact[1][indexFact];
+		indexFact--;
 		pthread_mutex_unlock(&mutex2);
 		sem_post(&empty2);
 		if(nombre==-1){
@@ -222,13 +217,10 @@ void *factorisation(void *param){
 	while(boolean){ //tant qu'il y a des chiffres a factoriser. 
 		sem_wait(&full1); //attente de chiffre.	
 		pthread_mutex_lock(&mutex1);
-		parcour =0;
-		do{   // les threads peuvent aller chercher les nombre n'importe ou dans le premier buffer. 
-			nombre = tabNbr[0][parcour];
-			tabNbr[0][parcour]=0; //eviter de refactoriser plusieurs fois le même nombre. 
-			parcour++;
-		}while(nombre==0);
-		fichier = tabNbr[1][parcour-1];
+		nombre = tabNbr[0][indexNbr];
+		fichier = tabNbr[1][indexNbr];
+		indexNbr--;
+		
 		pthread_mutex_unlock(&mutex1);
 		sem_post(&empty1);
 		if(nombre ==-1){ boolean =FALSE; //plus de nombre a tester
@@ -242,12 +234,9 @@ void *factorisation(void *param){
 					parcour=-1; 
 					sem_wait(&empty2);
 					pthread_mutex_lock(&mutex2);
-					do{	
-						parcour++;
-						test=tabFact[0][parcour];
-					}while(test!=0);
-					tabFact[0][parcour]=run->nombre; // Permet de dire que c'est ce facteur là.
-					tabFact[1][parcour]=(int) fichier;//Permet de dire de quel fichier il vient
+					indexFact++;
+					tabFact[0][indexFact]=run->nombre; // Permet de dire que c'est ce facteur là.
+					tabFact[1][indexFact]=(int) fichier;//Permet de dire de quel fichier il vient
 					pthread_mutex_unlock(&mutex2);
 					sem_post(&full2);		
 				}
@@ -280,22 +269,15 @@ void *factorisation(void *param){
 void insert(long nbr, int stdin_b,int pos){ 
 err = sem_wait(&empty1);
 	err=pthread_mutex_lock(&mutex1);
-		int boolean= TRUE;
-		int iterator =0;
-		while(boolean){
-			if(tabNbr[0][iterator]== 0){ 		
-				tabNbr[0][iterator]=nbr; 
-
-				boolean=FALSE;
-				if(stdin_b==TRUE){
-				tabNbr[1][iterator]=POSSTD;
-				} else {
-				tabNbr[1][iterator]=pos;
-				}
-				
-			}
-			iterator++;
+		indexNbr++;
+		tabNbr[0][indexNbr]=nbr;
+		if(stdin_b==TRUE){
+			tabNbr[1][indexNbr]=POSSTD;
+		} 
+		else {
+			tabNbr[1][indexNbr]=pos;
 		}
+		
 		err = pthread_mutex_unlock(&mutex1);
 	
 err = sem_post(&full1);
@@ -539,7 +521,7 @@ int j;
 for(j=0;j<N;j++){
 	err=pthread_create(&tabThread[j],NULL,&factorisation,NULL);
 }
-int k =1;
+int k =3;
 pthread_t compteur[k];
 for(j=0;j<k;j++){	
 	err=pthread_create(&compteur[j],NULL,&comptabilisateur,NULL);
@@ -554,12 +536,13 @@ if(stdin_bool){
 err=pthread_join(Stdin,NULL);
 }
 
-for(j=0;j<N;j++){
+for(j=0;j<2*N;j++){
 	sem_wait(&empty1);
 }
 err = pthread_mutex_lock(&mutex1);
 for(j=0;j<N;j++){
 	tabNbr[0][j]=-1;
+	indexNbr++;
 	sem_post(&full1);
 }
 pthread_mutex_unlock(&mutex1);
@@ -575,12 +558,13 @@ sem_wait(&empty3);
 sem_post(&full3);
 err = pthread_mutex_unlock(&mutex3);
 
-for(j=0;j<N;j++){
+for(j=0;j<2*N;j++){
 	sem_wait(&empty2);
 }
 pthread_mutex_lock(&mutex2);
 for(j=0;j<k;j++){
 	tabFact[0][j]=-1; //Aight
+	indexFact++;
 	sem_post(&full2);
 }
 pthread_mutex_unlock(&mutex2);
