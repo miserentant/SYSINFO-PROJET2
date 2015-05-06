@@ -174,7 +174,6 @@ void *comptabilisateur(void *param){
 
 		nombre = tabFact[0][indexFact];
 		fichier = tabFact[1][indexFact];
-		printf("[COMPTA]: fichier = %d\n", fichier);
 		indexFact--;
 		
 	
@@ -219,7 +218,6 @@ void *factorisation(void *param){
 		
 		nombre = tabNbr[0][indexNbr];
 		fichier = tabNbr[1][indexNbr];
-		printf("[FACTO]: fichier = %ld\n", fichier);
 		indexNbr--;
 		
 		pthread_mutex_unlock(&mutex1);
@@ -424,7 +422,6 @@ while(run!=NULL){
 	if(run->compteur==1){
 		retour=run->nombre;
 		fichierretour=run->fichier;
-		printf("[showResult]: fichier = %d\n", fichierretour);
 		nbdefacteur++;
 	}
 	suivant=run->next;
