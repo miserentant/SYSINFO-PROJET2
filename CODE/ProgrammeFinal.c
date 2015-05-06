@@ -471,7 +471,7 @@ for(i=1;i<argc;i++){
 	if(strcmp("-maxthreads",argv[i])==0){
 	
 	N=atoi(argv[i+1]);
-
+	printf("N=%d\n",N);
 	i++;}
 	else if(strcmp("-stdin",argv[i])==0){
 	stdin_bool = TRUE;}
@@ -490,12 +490,14 @@ for(i=1;i<argc;i++){
 
 //création des tableau d'argument par type
 tabFile = malloc(sizetabFile*sizeof(char *)); //ok
-tabUrl = malloc(sizetabFile*sizeof(char *)); //ok
+tabUrl = malloc(sizetabUrl*sizeof(char *)); //ok
 int runnerf=0;
 int runnerurl=0;
 for(i=1;i<argc;i++){
-	if(strcmp("-maxthreads",argv[i])==0 || strcmp("-stdin",argv[i])==0){
-	i++;} else 
+	if(strcmp("-maxthreads",argv[i])==0){
+	i++;} else if(strcmp("-stdin",argv[i])==0){
+	
+	} else
 	if(strlen(argv[i])>9){ //nombre de caractère nécessaire pour une URL valide A CHANGER P E
 		if(argv[i][4]==':'){
 			tabUrl[runnerurl] = argv[i];
