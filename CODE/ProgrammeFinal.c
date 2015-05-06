@@ -471,7 +471,6 @@ for(i=1;i<argc;i++){
 	if(strcmp("-maxthreads",argv[i])==0){
 	
 	N=atoi(argv[i+1]);
-	printf("N=%d\n",N);
 	i++;}
 	else if(strcmp("-stdin",argv[i])==0){
 	stdin_bool = TRUE;}
