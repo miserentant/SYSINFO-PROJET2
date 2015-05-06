@@ -278,12 +278,12 @@ err = sem_wait(&empty1);
 	err=pthread_mutex_lock(&mutex1);
 		indexNbr++;
 		tabNbr[0][indexNbr]=nbr;
-		int iterator =0;
+		
 		
 		if(stdin_b==TRUE){
-			tabNbr[1][iterator]=POSSTD;
+			tabNbr[1][indexNbr]=POSSTD;
 		} else {
-			tabNbr[1][iterator]=pos;
+			tabNbr[1][indexNbr]=pos;
 		}
 				
 
